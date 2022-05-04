@@ -1,4 +1,6 @@
-﻿namespace Life.API.Models
+﻿using Life.Data.Entities;
+
+namespace Life.API.Models
 {
     public class ApiPattern
     {

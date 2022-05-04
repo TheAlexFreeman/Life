@@ -68,16 +68,14 @@ namespace Life.API.Controllers
             _context.Patterns.Add(newPattern);
             _context.SaveChanges();
 
-            newPattern = _context.Patterns.First(p => p.Name == pattern.Name && p.Creator == pattern.Creator);
+            //newPattern = _context.Patterns.First(p => p.Name == pattern.Name && p.Creator == pattern.Creator);
             foreach (var p in pattern.Points)
             {
-                var point = new Point();
-                point.PatternId = newPattern.Id;
-                point.X = p.X;
-                point.Y = p.Y;
+                var point = new Point { X = p.X, Y = p.Y, PatternId = newPattern.Id };
                 _context.Points.Add(point);
             }
             _context.SaveChanges();
+
             pattern.Id = newPattern.Id;
             pattern.DateCreated = newPattern.DateCreated;
             return pattern;

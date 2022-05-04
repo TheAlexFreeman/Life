@@ -22,6 +22,18 @@ class Points {
         this._map = map;
     }
 
+    get hasPoints() {
+        return this._map.size > 0;
+    }
+
+    get size() {
+        const result = 0;
+        for (let kvp of this._map) {
+            result += kvp[1].size;
+        }
+        return result;
+    }
+
     get list() {
         const result = [];
         for (let kvp of this._map) {
@@ -29,6 +41,61 @@ class Points {
 
             for (let y of kvp[1]) {
                 result.push(point(x, y));
+            }
+        }
+        return result;
+    }
+
+    get max() {
+        const result = { x: 0, y: 0 }
+        for (let kvp of this._map) {
+            let x = kvp[0];
+            if (x > result.x && kvp[1].size) { result.x = x; }
+            for (let y of kvp[1]) {
+                if (y > result.y) { result.y = y; }
+            }
+        }
+        return { x, y };
+    }
+
+    get min() {
+        const result = { x: Infinity, y: Infinity }
+        for (let kvp of this._map) {
+            let x = kvp[0];
+            if (x < result.x && kvp[1].size) { result.x = x; }
+            for (let y of kvp[1]) {
+                if (y < result.y) { result.y = y; }
+            }
+        }
+        return result;
+    }
+
+    get boundingBox() {
+        const max = { x: 0, y: 0 }
+        const min = { x: Infinity, y: Infinity }
+        for (let kvp of this._map) {
+            let x = kvp[0];
+            if (x > max.x && kvp[1].size) { max.x = x; }
+            if (x < min.x && kvp[1].size) { min.x = x; }
+            for (let y of kvp[1]) {
+                if (y > max.y) { max.y = y; }
+                if (y < min.y) { min.y = y; }
+            }
+        }
+        return {
+            x: max.x - min.x + 1,
+            y: max.y - min.y + 1
+        }
+    }
+
+    get atOrigin() {
+        const result = [];
+        const min = this.min;
+        for (let kvp of this._map) {
+            let x = kvp[0];
+
+            for (let y of kvp[1]) {
+                result.push(point(x - min.x, y - min.y));
             }
         }
         return result;
@@ -76,6 +143,21 @@ class Points {
                 this._map.set(x, kvp[1]);
             }
         }
+    }
+
+    translate(dx, dy) {
+        const newMap = new Map();
+        for (let kvp of points._map) {
+            let x = kvp[0] + dx;
+            newMap.set(x, new Set());
+
+            let row = newMap.get(x);
+            for (let y of kvp[1]) {
+                row.add(y + dy);
+            }
+        }
+        this._map = newMap;
+        return this;
     }
 }
 

@@ -18,6 +18,10 @@ h2 {
     width: 100px;
 }
 
+select {
+    min-width: 100px;
+}
+
 .row {
     height: 11px;
 }

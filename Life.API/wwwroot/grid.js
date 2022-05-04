@@ -13,6 +13,7 @@ class SmartGrid {
     liveCells = new Points();
     relevantCells = new Points();
     memory = [];
+    previewPattern = null;
 
     constructor(size = SIZE, id = 'grid') {
         this.gridElement = document.getElementById(id);
@@ -20,8 +21,16 @@ class SmartGrid {
         this.fillGrid();
     }
 
+    get hasCells() {
+        return this.liveCells.hasPoints;
+    }
+
     get liveCellsList() {
         return this.liveCells.list;
+    }
+
+    get normalizedCells() {
+        return this.liveCells.atOrigin;
     }
 
     neighbors(point) {
@@ -33,6 +42,14 @@ class SmartGrid {
         return {
             x: (x + point.x) % x,
             y: (y + point.y) % y
+        }
+    }
+
+    ptAdd(p1, p2) {
+        const { x, y } = this.size;
+        return {
+            x: (p1.x + p2.x) % x,
+            y: (p1.y + p2.y) % y,
         }
     }
 
@@ -54,9 +71,7 @@ class SmartGrid {
     }
 
     eraseGrid() {
-        this.grid = [];
-        this.gridElement.innerHTML = '';
-        this.liveCells.clear();
+        this.liveCellsList.forEach(p => this.removeCell(p));
         this.relevantCells.clear();
         this.memory = [];
     }
@@ -73,8 +88,11 @@ class SmartGrid {
         this.grid[x] = [];
 
         for (let y = 0; y < columns; y++) {
-            const cell = this.createCell();
-            cell.onclick = this.cellClickHandler({ x, y });
+            const cell = create('span', 'cell');
+            const p = { x, y };
+            cell.onclick = this.cellClickHandler(p);
+            cell.onmouseover = this.cellMouseOverHandler(cell, p);
+            cell.onmouseout = this.cellMouseOutHandler(cell, p);
 
             row.appendChild(cell);
             this.grid[x].push(cell);
@@ -84,23 +102,44 @@ class SmartGrid {
     }
 
     cellClickHandler = p => () => {
-        if (this.memory.length) {
-            this.memory[this.memory.length - 1].push(p);
+        if (this.previewPattern) {
+            const pattern = this.previewPattern;
+            this.previewPattern = null;
+            this.preview(p, pattern.points, false);
+
+            for (let point of pattern.points) {
+                this.addCell(this.ptAdd(p, point));
+            }
+        } else {
+            if (this.memory.length) {
+                this.memory[this.memory.length - 1].push(p);
+            }
+            this.toggleCell(p);
         }
-        this.toggleCell(p);
     }
 
-    createCell() {
-        const cell = create('span', 'cell');
-
-        cell.onmouseover = function () {
-            cell.style.opacity = 0.5;
+    cellMouseOverHandler = (cell, p) => () => {
+        cell.style.opacity = 0.5;
+        if (this.previewPattern) {
+            this.preview(p, this.previewPattern.points)
         }
-        cell.onmouseout = function () {
-            cell.style.opacity = 1.0;
-        }
+    }
 
-        return cell;
+    cellMouseOutHandler = (cell, p) => () => {
+        cell.style.opacity = 1.0;
+        if (this.previewPattern) {
+            this.preview(p, this.previewPattern.points, false);
+        }
+    }
+
+    preview(p, cells, flag = true) {
+        for (let cell of cells) {
+            const { x, y } = this.ptAdd(p, cell);
+            const cellElement = this.grid[x][y];
+            cellElement.style.backgroundColor = flag ? 'limegreen' :
+                (this.liveCells.has({ x, y }) ? 'limegreen' : 'lightgray');
+            cellElement.style.opacity = flag ? 0.75 : 1.0;
+        }
     }
 
     toggleCell(point) {

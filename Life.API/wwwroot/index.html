@@ -9,6 +9,8 @@
 
 <body>
     <h1 id="life-title">Conway's Game of LIFE</h1>
+    <hr />
+
     <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">
         <h3>From Wikipedia</h3>
     </a>
@@ -82,6 +84,8 @@
             </label>
         </span>
 
+        <button onclick="clearBoard()">Clear Board</button>
+
         <span id="grid-run">
             <button onclick="back()">&lt;&lt;&lt;</button>
             <button onclick="step()">&gt;&gt;&gt;</button>
@@ -105,35 +109,22 @@
     </div>
 
     <hr />
-    <!-- <h1>To-do CRUD</h1>
-    <h3>Add</h3>
-    <form action="javascript:void(0);" method="POST" onsubmit="addItem()">
-        <input type="text" id="add-name" placeholder="New to-do">
-        <input type="submit" value="Add">
-    </form>
-
-    <div id="editForm">
-        <h3>Edit</h3>
-        <form action="javascript:void(0);" onsubmit="updateItem()">
-            <input type="hidden" id="edit-id">
-            <input type="checkbox" id="edit-isComplete">
-            <input type="text" id="edit-name">
-            <input type="submit" value="Save">
-            <a onclick="closeInput()" aria-label="Close">&#10006;</a>
-        </form>
-    </div>
-
-    <p id="counter"></p>
-
     <table>
-        <tr>
-            <th>Is Complete?</th>
-            <th>Name</th>
-            <th></th>
-            <th></th>
-        </tr>
-        <tbody id="todos"></tbody>
-    </table> -->
+        <thead>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
 
     <script src="points.js" asp-append-version="true"></script>
     <script src="grid.js" asp-append-version="true"></script>
@@ -166,12 +157,11 @@
         function loadBoard(id) {
             fetch(`${lifeUri}/${id}`)
                 .then(response => response.json())
-                .then(data => data.points.forEach(p => GRID.addCell(p)));
+                .then(data => GRID.previewPattern = data);
         }
 
         function saveBoard(name, liveCells) {
             const body = JSON.stringify({ id: 0, name, creator: "Anonymouse", points: liveCells });
-            console.dir(body);
             fetch(`${lifeUri}/`, {
                 method: 'POST',
                 headers: {
@@ -179,7 +169,10 @@
                     'Content-Type': 'application/json'
                 },
                 body: body
-            }).then(response => response.json()).then(x => console.dir(x)).catch(error => console.error("Unable to save board. ", error));
+            })
+                .then(response => response.json())
+                .then(pattern => addMenuOption(document.getElementById('pattern-menu'), pattern))
+                .catch(error => console.error("Unable to save board. ", error));
         }
 
         window.onkeydown = function (event) {
@@ -195,12 +188,14 @@
             if (!patternName || patternName === '') {
                 return window.alert("Cannot save board without pattern name.");
             }
-            if (GRID.liveCellsList.length) {
-                saveBoard(patternName, GRID.liveCellsList);
+            if (GRID.hasCells) {
+                saveBoard(patternName, GRID.normalizedCells);
             } else {
                 return window.alert("Board cannot be empty.")
             }
         }
+
+        function clearBoard() { GRID.eraseGrid() }
 
         function step() { GRID.step() }
         function back() { GRID.back() }
