@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore;
 using Life.Data.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,14 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<LifeDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LifeDB"))
 );
+var allowMySites = "_AllowMySites";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowMySites, policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 //builder.Services.AddEndpointsApiExplorer();
@@ -27,6 +36,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
+
+app.UseCors(allowMySites);
 
 app.UseAuthorization();
 
