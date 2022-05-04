@@ -8,7 +8,7 @@ function getPatternNames() {
 
 function loadBoard(id) {
     fetch(`${lifeUri}/${id}`)
-        .then(response => { console.dir(response); return response.json() })
+        .then(response => response.json())
         .then(data => console.dir(data));
 }
 
