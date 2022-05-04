@@ -1,0 +1,28 @@
+﻿#grid-size input {
+    width: 45px;
+}
+
+#grid-library input {
+    width: 100px;
+}
+
+.row {
+    height: 11px;
+}
+
+.row:first-child .cell {
+    border-top: 1px solid gray;
+}
+
+.cell {
+    display: inline-block;
+    height: 10px;
+    width: 10px;
+    background-color: lightgray;
+    border-bottom: 1px solid gray;
+    border-right: 1px solid gray;
+}
+
+.cell:first-child {
+    border-left: 1px solid gray;
+}

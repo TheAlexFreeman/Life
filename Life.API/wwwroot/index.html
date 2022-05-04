@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Game of Life</title>
+    <link rel="stylesheet" href="site.css" />
+</head>
+
+<body>
+    <h1 id="life-title">Conway's Game of LIFE</h1>
+    <a href="">
+        <h3>From Wikipedia</h3>
+    </a>
+    <p>The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John
+        Horton
+        Conway in 1970. It is a zero-player game, meaning that its evolution is determined by its initial state,
+        requiring no further input. One interacts with the Game of Life by creating an initial configuration and
+        observing how
+        it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.</p>
+
+    <p>The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
+        is in
+        one of two possible states, live or dead (or populated and unpopulated, respectively). Every cell interacts with
+        its
+        eight neighbours, which are the cells that are horizontally, vertically, or diagonally adjacent. At each step in
+        time,
+        the following transitions occur:</p>
+
+    <ul>
+        <li>Any live cell with fewer than two live neighbours dies, as if by underpopulation.</li>
+        <li>Any live cell with two or three live neighbours lives on to the next generation.</li>
+        <li>Any live cell with more than three live neighbours dies, as if by overpopulation.</li>
+        <li>Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</li>
+    </ul>
+    <p>These rules, which compare the behavior of the automaton to real life, can be condensed into the following:</p>
+
+    <ul>
+        <li>Any live cell with two or three live neighbours survives.</li>
+        <li>Any dead cell with three live neighbours becomes a live cell.</li>
+        <li>All other live cells die in the next generation. Similarly, all other dead cells stay dead.</li>
+    </ul>
+    <p>The initial pattern constitutes the seed of the system. The first generation is created by applying the above
+        rules
+        simultaneously to every cell in the seed, live or dead; births and deaths occur simultaneously, and the discrete
+        moment
+        at which this happens is sometimes called a tick. Each generation is a pure function of the preceding one. The
+        rules continue to be applied repeatedly to create further generations.</p>
+
+    <div id="grid-controls">
+        <span id="grid-size">
+            <label for="width">Board Width:
+                <input id="width" type="number" value="150" onchange="updateWidth(event.target.value)" />
+            </label>
+            <label for="height">Board Height:
+                <input id="height" type="number" value="150" onchange="updateHeight(event.target.value)" />
+            </label>
+        </span>
+
+        <span id="grid-run">
+            <button onclick="back()">&lt;&lt;&lt;</button>
+            <button onclick="step()">&gt;&gt;&gt;</button>
+        </span>
+
+        <span id="grid-library">
+            <label for="patternName">Pattern Name
+                <input id="patternName" type="text" onchange="updatePatternName(event.target.value)" />
+            </label>
+            <button onclick="savePattern()">Save Board</button>
+        </span>
+    </div>
+
+    <div id="grid">
+    </div>
+
+    <hr />
+    <!-- <h1>To-do CRUD</h1>
+    <h3>Add</h3>
+    <form action="javascript:void(0);" method="POST" onsubmit="addItem()">
+        <input type="text" id="add-name" placeholder="New to-do">
+        <input type="submit" value="Add">
+    </form>
+
+    <div id="editForm">
+        <h3>Edit</h3>
+        <form action="javascript:void(0);" onsubmit="updateItem()">
+            <input type="hidden" id="edit-id">
+            <input type="checkbox" id="edit-isComplete">
+            <input type="text" id="edit-name">
+            <input type="submit" value="Save">
+            <a onclick="closeInput()" aria-label="Close">&#10006;</a>
+        </form>
+    </div>
+
+    <p id="counter"></p>
+
+    <table>
+        <tr>
+            <th>Is Complete?</th>
+            <th>Name</th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tbody id="todos"></tbody>
+    </table> -->
+
+    <script src="points.js" asp-append-version="true"></script>
+    <script src="grid.js" asp-append-version="true"></script>
+    <script src="site.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        getPatternNames();
+        const GRID = new SmartGrid();
+        let patternName = '';
+
+        window.onkeydown = function (event) {
+            if (event.keyCode === 39) { step(); }
+            if (event.keyCode === 37) { back(); }
+        }
+
+        function updatePatternName(name) {
+            patternName = name;
+        }
+
+        function savePattern() {
+            if (!patternName || patternName === '') {
+                return window.alert("Cannot save board without pattern name.");
+            }
+            if (GRID.liveCellsList.length) {
+                saveBoard(patternName, GRID.liveCellsList);
+            } else {
+                return window.alert("Board cannot be empty.")
+            }
+        }
+
+        function step() { GRID.step() }
+        function back() { GRID.back() }
+
+        function updateWidth(width) {
+            GRID.updateWidth(width);
+        }
+        function updateHeight(height) {
+            GRID.updateHeight(height);
+        }
+    </script>
+</body>
+
+</html>
