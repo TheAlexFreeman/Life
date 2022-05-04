@@ -68,15 +68,17 @@
         </span>
 
         <span id="grid-library">
-            <label for="patternName">Pattern Name
-                <input id="patternName" type="text" onchange="updatePatternName(event.target.value)" />
+            <label for="pattern-name">Pattern Name
+                <input id="pattern-name" type="text" onchange="updatePatternName(event.target.value)" />
             </label>
             <button onclick="savePattern()">Save Board</button>
+            <label for="pattern-menu" onchange="loadBoard(event.target.value)">
+                <select id="pattern-menu">
+                </select>
+            </label>
         </span>
     </div>
-
-    <div id="grid-header"></div>
-
+    <h2>Play the game!</h2>
     <div id="grid">
     </div>
 
@@ -121,11 +123,23 @@
         let NAMES = [];
         const lifeUri = 'api/Patterns';
 
+        function menuOption(patternId, patternName) {
+            const option = document.createElement('option');
+            option.value = patternId;
+            option.textContent = patternName;
+            return option;
+        }
+
+        function addMenuOption(menu, pattern) {
+            menu.appendChild(menuOption(pattern.id, pattern.name));
+        }
+
         function getPatternNames() {
-            const gridHeader = document.getElementById('grid-header');
+            const menu = document.getElementById('pattern-menu');
+            menu.innerHTML = '';
             fetch(`${lifeUri}/`)
                 .then(response => response.json())
-                .then(data => { data.forEach(name => gridHeader.appendChild(document.createTextNode(name))) });
+                .then(data => { data.forEach(pattern => addMenuOption(menu, pattern)) });
         }
 
         function loadBoard(id) {

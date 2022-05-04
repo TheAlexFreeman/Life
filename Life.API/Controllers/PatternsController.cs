@@ -22,9 +22,9 @@ namespace Life.API.Controllers
 
         // GET: api/<PatternsController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<ApiPattern> Get()
         {
-            return _context.Patterns.Select(p => p.Name);
+            return _context.Patterns.Select(p => new ApiPattern { Id = p.Id, Name = p.Name });
         }
 
         // GET api/<PatternsController>/5
