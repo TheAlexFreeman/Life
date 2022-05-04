@@ -1,21 +1,21 @@
-﻿const lifeUri = 'api';
+﻿const lifeUri = 'api/Patterns';
 
 function getPatternNames() {
-    fetch(`${lifeUri}/GetPatternNames`)
+    fetch(`${lifeUri}/`)
         .then(response => response.json())
         .then(data => console.dir(data));
 }
 
 function loadBoard(id) {
-    fetch(`${lifeUri}/GetPatternById/${id}`)
+    fetch(`${lifeUri}/${id}`)
         .then(response => { console.dir(response); return response.json() })
         .then(data => console.dir(data));
 }
 
 function saveBoard(name, liveCells) {
-    const body = JSON.stringify({ id: 0, name, creatorName: "Anonymouse", points: liveCells });
+    const body = JSON.stringify({ id: 0, name, creator: "Anonymouse", points: liveCells });
     console.dir(body);
-    fetch(`${lifeUri}/SavePattern`, {
+    fetch(`${lifeUri}/`, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -29,7 +29,7 @@ class LifeModel {
     id = 0;
     name = '';
     points = [];
-    creatorName = 'Anonymouse';
+    creator = 'Anonymouse';
     constructor(id, name, points) {
         this.id = id;
         this.name = name;
