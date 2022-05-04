@@ -12,30 +12,42 @@
     <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">
         <h3>From Wikipedia</h3>
     </a>
-    <p>The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John
+    <p>
+        The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John
         Horton
         Conway in 1970. It is a zero-player game, meaning that its evolution is determined by its initial state,
         requiring no further input. One interacts with the Game of Life by creating an initial configuration and
         observing how
-        it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.</p>
+        it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.
+    </p>
 
-    <p>The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
+    <p>
+        The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
         is in
         one of two possible states, live or dead (or populated and unpopulated, respectively). Every cell interacts with
         its
         eight neighbours, which are the cells that are horizontally, vertically, or diagonally adjacent. At each step in
         time,
-        the following transitions occur:</p>
+        the following transitions occur:
+    </p>
 
     <ul>
-        <li><strong>Any <em>live</em> cell with <em>fewer than two</em> live neighbours dies</strong>, as if by
-            underpopulation.</li>
-        <li><strong>Any <em>live</em> cell with <em>two or three</em> live neighbours lives on</strong> to the next
-            generation.</li>
-        <li><strong>Any <em>live</em> cell with <em>more than three</em> live neighbours dies</strong>, as if by
-            overpopulation.</li>
-        <li><strong>Any <em>dead</em> cell with <em>exactly three</em> live neighbours becomes a live cell</strong>, as
-            if by reproduction.</li>
+        <li>
+            <strong>Any <em>live</em> cell with <em>fewer than two</em> live neighbours dies</strong>, as if by
+            underpopulation.
+        </li>
+        <li>
+            <strong>Any <em>live</em> cell with <em>two or three</em> live neighbours lives on</strong> to the next
+            generation.
+        </li>
+        <li>
+            <strong>Any <em>live</em> cell with <em>more than three</em> live neighbours dies</strong>, as if by
+            overpopulation.
+        </li>
+        <li>
+            <strong>Any <em>dead</em> cell with <em>exactly three</em> live neighbours becomes a live cell</strong>, as
+            if by reproduction.
+        </li>
     </ul>
     <p>These rules, which compare the behavior of the automaton to real life, can be condensed into the following:</p>
 
@@ -45,19 +57,27 @@
         <li><strong>All other live cells die in the next generation.</strong></li>
         <li>Similarly, all other dead cells stay dead.</li>
     </ul>
-    <p>The initial pattern constitutes the seed of the system. The first generation is created by applying the above
+    <p>
+        The initial pattern constitutes the seed of the system. The first generation is created by applying the above
         rules
         simultaneously to every cell in the seed, live or dead; births and deaths occur simultaneously, and the discrete
         moment
         at which this happens is sometimes called a tick. Each generation is a pure function of the preceding one. The
-        rules continue to be applied repeatedly to create further generations.</p>
+        rules continue to be applied repeatedly to create further generations.
+    </p>
+
+    <hr />
+
+    <h2>Play the game!</h2>
 
     <div id="grid-controls">
         <span id="grid-size">
-            <label for="width">Board Width:
+            <label for="width">
+                Board Width:
                 <input id="width" type="number" value="150" onchange="updateWidth(event.target.value)" />
             </label>
-            <label for="height">Board Height:
+            <label for="height">
+                Board Height:
                 <input id="height" type="number" value="150" onchange="updateHeight(event.target.value)" />
             </label>
         </span>
@@ -68,17 +88,19 @@
         </span>
 
         <span id="grid-library">
-            <label for="pattern-name">Pattern Name
+            <label for="pattern-name">
+                Pattern Name:
                 <input id="pattern-name" type="text" onchange="updatePatternName(event.target.value)" />
             </label>
             <button onclick="savePattern()">Save Board</button>
             <label for="pattern-menu" onchange="loadBoard(event.target.value)">
+                Load Pattern:
                 <select id="pattern-menu">
                 </select>
             </label>
         </span>
     </div>
-    <h2>Play the game!</h2>
+
     <div id="grid">
     </div>
 
@@ -120,7 +142,6 @@
 
         const GRID = new SmartGrid();
         let patternName = '';
-        let NAMES = [];
         const lifeUri = 'api/Patterns';
 
         function menuOption(patternId, patternName) {

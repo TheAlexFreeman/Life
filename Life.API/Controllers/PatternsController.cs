@@ -24,7 +24,12 @@ namespace Life.API.Controllers
         [HttpGet]
         public IEnumerable<ApiPattern> Get()
         {
-            return _context.Patterns.Select(p => new ApiPattern { Id = p.Id, Name = p.Name });
+            return _context.Patterns.Select(p => new ApiPattern {
+                Id = p.Id,
+                Name = p.Name,
+                Creator = p.Creator,
+                DateCreated  = p.DateCreated
+            });
         }
 
         // GET api/<PatternsController>/5
