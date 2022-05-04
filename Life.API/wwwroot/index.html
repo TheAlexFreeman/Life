@@ -28,10 +28,14 @@
         the following transitions occur:</p>
 
     <ul>
-        <li><strong>Any <em>live</em> cell with <em>fewer than two</em> live neighbours dies</strong>, as if by underpopulation.</li>
-        <li><strong>Any <em>live</em> cell with <em>two or three</em> live neighbours lives on</strong> to the next generation.</li>
-        <li><strong>Any <em>live cell</em> with <em>more than three</em> live neighbours dies</strong>, as if by overpopulation.</li>
-        <li><strong>Any <em>dead cell</em> with <em>exactly three</em> live neighbours becomes a live cell</strong>, as if by reproduction.</li>
+        <li><strong>Any <em>live</em> cell with <em>fewer than two</em> live neighbours dies</strong>, as if by
+            underpopulation.</li>
+        <li><strong>Any <em>live</em> cell with <em>two or three</em> live neighbours lives on</strong> to the next
+            generation.</li>
+        <li><strong>Any <em>live</em> cell with <em>more than three</em> live neighbours dies</strong>, as if by
+            overpopulation.</li>
+        <li><strong>Any <em>dead</em> cell with <em>exactly three</em> live neighbours becomes a live cell</strong>, as
+            if by reproduction.</li>
     </ul>
     <p>These rules, which compare the behavior of the automaton to real life, can be condensed into the following:</p>
 
@@ -71,6 +75,8 @@
         </span>
     </div>
 
+    <div id="grid-header"></div>
+
     <div id="grid">
     </div>
 
@@ -109,9 +115,37 @@
     <script src="grid.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
     <script type="text/javascript">
-        getPatternNames();
+
         const GRID = new SmartGrid();
         let patternName = '';
+        let NAMES = [];
+        const lifeUri = 'api/Patterns';
+
+        function getPatternNames() {
+            const gridHeader = document.getElementById('grid-header');
+            fetch(`${lifeUri}/`)
+                .then(response => response.json())
+                .then(data => { data.forEach(name => gridHeader.appendChild(document.createTextNode(name))) });
+        }
+
+        function loadBoard(id) {
+            fetch(`${lifeUri}/${id}`)
+                .then(response => response.json())
+                .then(data => data.points.forEach(p => GRID.addCell(p)));
+        }
+
+        function saveBoard(name, liveCells) {
+            const body = JSON.stringify({ id: 0, name, creator: "Anonymouse", points: liveCells });
+            console.dir(body);
+            fetch(`${lifeUri}/`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            }).then(response => response.json()).then(x => console.dir(x)).catch(error => console.error("Unable to save board. ", error));
+        }
 
         window.onkeydown = function (event) {
             if (event.keyCode === 39) { step(); }
@@ -142,6 +176,8 @@
         function updateHeight(height) {
             GRID.updateHeight(height);
         }
+
+        getPatternNames();
     </script>
 </body>
 

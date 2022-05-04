@@ -1,4 +1,15 @@
-﻿#grid-size input {
+﻿p,
+li,
+a {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: large;
+}
+
+h1 {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+#grid-size input {
     width: 45px;
 }
 
