@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore;
 using Life.Data.Entities;
+using Life.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<LifeDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LifeDB"))
 );
+builder.Services.AddScoped<PatternRepository>();
+
 var allowMySites = "_AllowMySites";
 builder.Services.AddCors(options =>
 {

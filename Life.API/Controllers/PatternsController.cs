@@ -1,5 +1,6 @@
 ﻿using Life.API.Models;
 using Life.Data.Entities;
+using Life.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -12,19 +13,18 @@ namespace Life.API.Controllers
     [ApiController]
     public class PatternsController : ControllerBase
     {
-        private readonly List<ApiPattern> memory = new List<ApiPattern>();
-        private readonly LifeDBContext _context;
+        private readonly PatternRepository _repo;
 
-        public PatternsController(LifeDBContext context)
+        public PatternsController(PatternRepository repo)
         {
-            _context = context;
+            _repo = repo;
         }
 
         // GET: api/<PatternsController>
         [HttpGet]
         public IEnumerable<ApiPattern> Get()
         {
-            return _context.Patterns.Select(p => new ApiPattern {
+            return _repo.GetAllPatterns().Select(p => new ApiPattern {
                 Id = p.Id,
                 Name = p.Name,
                 Creator = p.Creator,
@@ -36,25 +36,13 @@ namespace Life.API.Controllers
         [HttpGet("{id}")]
         public ApiPattern Get(int id)
         {
-            var pattern = _context.Patterns.ToList().FirstOrDefault(p => p.Id == id, null);
+            var pattern = _repo.GetPatternById(id);
             if (pattern == null)
             {
                 return new ApiPattern();
             } else
             {
-                var apiPattern = new ApiPattern();
-                apiPattern.Id = pattern.Id;
-                apiPattern.Name = pattern.Name;
-                apiPattern.Creator = pattern.Creator;
-                apiPattern.DateCreated = pattern.DateCreated;
-                foreach (var p in _context.Points.Where(p => p.PatternId == id))
-                {
-                    var apiPoint = new ApiPoint();
-                    apiPoint.X = p.X;
-                    apiPoint.Y = p.Y;
-                    apiPattern.Points.Add(apiPoint);
-                }
-                return apiPattern;
+                return new ApiPattern(pattern);
             }
         }
 
@@ -65,16 +53,13 @@ namespace Life.API.Controllers
             var newPattern = new Pattern();
             newPattern.Name = pattern.Name;
             newPattern.Creator = pattern.Creator;
-            _context.Patterns.Add(newPattern);
-            _context.SaveChanges();
 
-            //newPattern = _context.Patterns.First(p => p.Name == pattern.Name && p.Creator == pattern.Creator);
             foreach (var p in pattern.Points)
             {
-                var point = new Point { X = p.X, Y = p.Y, PatternId = newPattern.Id };
-                _context.Points.Add(point);
+                newPattern.Points.Add(new Point { X = p.X, Y = p.Y });
             }
-            _context.SaveChanges();
+
+            newPattern = _repo.AddPattern(newPattern);
 
             pattern.Id = newPattern.Id;
             pattern.DateCreated = newPattern.DateCreated;
