@@ -1,203 +1,150 @@
-const SIZE = { x: 150, y: 150 };
-
 function create(tagName = 'div', className = '') {
     const el = document.createElement(tagName);
     el.className = className;
     return el;
 }
 
-class SmartGrid {
+const COLORS = {
+    ON: 'limegreen',
+    OFF: 'lightgray'
+}
+
+function normalizeCellColor(cell) {
+    cell.element.style.opacity = 1.0;
+    cell.element.style.backgroundColor =
+        cell.isAlive ? COLORS.ON : COLORS.OFF;
+}
+
+class Grid {
+    root;
     size;
-    grid = [];
-    gridElement;
-    liveCells = new Points();
-    relevantCells = new Points();
-    memory = [];
-    previewPattern = null;
+    _grid;
 
-    constructor(size = SIZE, id = 'grid') {
-        this.gridElement = document.getElementById(id);
-        this.size = size;
-        this.fillGrid();
+    constructor(size, cells = []) {
+        this.root = document.getElementById('grid');
+        this.setSize(size);
+        cells.forEach(({ x, y }) => {
+            if (x < size.x && y < size.y) {
+                this.toggleCell(x, y)
+            }
+        });
     }
 
-    get hasCells() {
-        return this.liveCells.hasPoints;
-    }
-
-    get liveCellsList() {
-        return this.liveCells.list;
-    }
-
-    get normalizedCells() {
-        return this.liveCells.atOrigin;
-    }
-
-    neighbors(point) {
-        return neighbors(point).map(p => this.mod(p));
-    }
-
-    mod(point) {
-        const { x, y } = this.size;
-        return {
-            x: (x + point.x) % x,
-            y: (y + point.y) % y
+    clear() {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++)
+                this.removeCell(x, y);
         }
+    }
+
+    setSize(size) {
+        this.size = size;
+        this._grid = [];
+        this.root.innerHTML = '';
+        this.fill(size);
+    }
+
+    fill(size) {
+        for (let x = 0; x < size.x; x++) {
+            this._grid.push([]);
+            this.root.appendChild(this.createRow(x, size.y));
+        }
+    }
+
+    createRow(x = 0, size = 10) {
+        const row = create('div', 'row');
+        for (let y = 0; y < size; y++) {
+            const cell = create('span', 'cell');
+            cell.onmouseover = () => { cell.style.opacity = 0.5; }
+            cell.onmouseout = () => { cell.style.opacity = 1.0; }
+            cell.onclick = () => { this.toggleCell(x, y); }
+            row.appendChild(cell);
+            this._grid[x].push({ element: cell, isAlive: false });
+        }
+        return row;
+    }
+
+    addPattern(points, dx = 0, dy = 0) {
+        this.addCells(this.translatePattern(points, dx, dy));
+    }
+
+    addCells(cells) {
+        for (let { x, y } of cells) {
+            this.addCell(x, y);
+        }
+    }
+
+    addCell(x, y) {
+        const cell = this._grid[x][y];
+        cell.isAlive = true;
+        cell.element.style.backgroundColor = COLORS.ON;
+    }
+
+    removeCell(x, y) {
+        const cell = this._grid[x][y];
+        cell.isALive = false;
+        cell.element.style.backgroundColor = COLORS.OFF;
+    }
+
+    toggleCell(x, y) {
+        const cell = this._grid[x][y];
+        cell.isAlive = !cell.isAlive;
+        normalizeCellColor(cell);
+    }
+
+    previewPattern(points, dx = 0, dy = 0, on = true) {
+        for (let p of this.translatePattern(points, dx, dy)) {
+            this.previewCell(p.x, p.y, on);
+        }
+    }
+
+    translatePattern(points, dx = 0, dy = 0) {
+        return points.map(p => this.ptAdd(p, { x: dx, y: dy }));
     }
 
     ptAdd(p1, p2) {
-        const { x, y } = this.size;
+        // TODO: Toggle borders on/off
         return {
-            x: (p1.x + p2.x) % x,
-            y: (p1.y + p2.y) % y,
+            x: (p1.x + p2.x) % this.size.x,
+            y: (p1.y + p2.y) % this.size.y,
         }
     }
 
-    updateSize(x = 1, y = 1) {
-        this.eraseGrid();
-        this.fillGrid(x, y);
-    }
-
-    updateWidth(width) {
-        this.eraseGrid();
-        this.size.y = parseInt(width);
-        this.fillGrid();
-    }
-
-    updateHeight(height) {
-        this.eraseGrid();
-        this.size.x = parseInt(height);
-        this.fillGrid();
-    }
-
-    eraseGrid() {
-        this.liveCellsList.forEach(p => this.removeCell(p));
-        this.relevantCells.clear();
-        this.memory = [];
-    }
-
-    fillGrid() {
-        const { x, y } = this.size;
-        for (let row = 0; row < x; row++) {
-            this.createRow(row, y);
-        }
-    }
-
-    createRow(x = 0, columns = 10) {
-        const row = create('div', 'row');
-        this.grid[x] = [];
-
-        for (let y = 0; y < columns; y++) {
-            const cell = create('span', 'cell');
-            const p = { x, y };
-            cell.onclick = this.cellClickHandler(p);
-            cell.onmouseover = this.cellMouseOverHandler(cell, p);
-            cell.onmouseout = this.cellMouseOutHandler(cell, p);
-
-            row.appendChild(cell);
-            this.grid[x].push(cell);
-        }
-
-        this.gridElement.appendChild(row);
-    }
-
-    cellClickHandler = p => () => {
-        if (this.previewPattern) {
-            const pattern = this.previewPattern;
-            this.previewPattern = null;
-            this.preview(p, pattern.points, false);
-
-            for (let point of pattern.points) {
-                this.addCell(this.ptAdd(p, point));
-            }
+    previewCell(x, y, on = true) {
+        const cell = this._grid[x][y];
+        if (on) {
+            cell.element.style.opacity = 0.9
+            cell.element.backgroundColor = COLORS.ON;
         } else {
-            if (this.memory.length) {
-                this.memory[this.memory.length - 1].push(p);
-            }
-            this.toggleCell(p);
+            normalizeCellColor(cell);
         }
     }
 
-    cellMouseOverHandler = (cell, p) => () => {
-        cell.style.opacity = 0.5;
-        if (this.previewPattern) {
-            this.preview(p, this.previewPattern.points)
-        }
-    }
-
-    cellMouseOutHandler = (cell, p) => () => {
-        cell.style.opacity = 1.0;
-        if (this.previewPattern) {
-            this.preview(p, this.previewPattern.points, false);
-        }
-    }
-
-    preview(p, cells, flag = true) {
-        for (let cell of cells) {
-            const { x, y } = this.ptAdd(p, cell);
-            const cellElement = this.grid[x][y];
-            cellElement.style.backgroundColor = flag ? 'limegreen' :
-                (this.liveCells.has({ x, y }) ? 'limegreen' : 'lightgray');
-            cellElement.style.opacity = flag ? 0.75 : 1.0;
-        }
-    }
-
-    toggleCell(point) {
-        if (this.liveCells.has(point)) {
-            this.removeCell(point);
-        } else {
-            this.addCell(point);
-        }
-    }
-
-    addCell(point) {
-        this.liveCells.add(point);
-        this.relevantCells.addPoints(point, ...this.neighbors(point));
-        this.updateCellElement(point, true);
-    }
-
-    removeCell(point) {
-        this.liveCells.remove(point);
-        this.updateCellElement(point, false);
-    }
-
-    updateCellElement(p, alive = true) {
-        const cellElement = this.grid[p.x][p.y];
-        cellElement.style.backgroundColor = alive ? 'limegreen' : 'lightgray';
-    }
-
-    countLiveNeighbors(point = { x: 0, y: 0 }) {
-        return this.neighbors(point).filter(p => this.liveCells.has(p)).length;
-    }
-
-    step() {
-        const changes = [];
-        for (let point of this.relevantCells.list) {
-            let liveNeighborCount = this.countLiveNeighbors(point);
-
-            if (liveNeighborCount < 2) {
-                this.relevantCells.remove(point);
-            }
-
-            if (this.liveCells.has(point)) {
-                if (liveNeighborCount < 2 || liveNeighborCount > 3) {
-                    changes.push(point);
-                }
-            } else {
-                if (liveNeighborCount === 3) {
-                    changes.push(point);
-                }
+    onCellClick(clickHandler) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                this._grid[x][y].element.onclick = clickHandler(x, y);
             }
         }
+    }
 
-        if (changes.length) {
-            this.memory.push(changes);
-            changes.forEach(p => this.toggleCell(p));
+    resetCellHover() {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                let cell = this._grid[x][y].element
+                cell.onmouseover = () => { cell.style.opacity = 0.5; };
+                cell.onmouseout = () => { cell.style.opacity = 1.0; };
+            }
         }
     }
 
-    back() {
-        const changes = this.memory.pop();
-        changes.forEach(p => this.toggleCell(p));
+    onCellHover(mouseOver, mouseOut) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                let cell = this._grid[x][y].element
+                cell.onmouseover = mouseOver(x, y);
+                cell.onmouseout = mouseOut(x, y);
+            }
+        }
     }
 }

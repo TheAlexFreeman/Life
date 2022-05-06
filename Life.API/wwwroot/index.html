@@ -69,44 +69,55 @@
     </p>
 
     <hr />
+    <div id="grid-container">
+        <h2>Play the game!</h2>
 
-    <h2>Play the game!</h2>
+        <div id="grid-actions">
+            <div id="grid-size">
+                <label for="width">
+                    Board Width:
+                    <input id="width" type="number" value="150" />
+                </label>
+                <label for="height">
+                    Board Height:
+                    <input id="height" type="number" value="150" />
+                </label>
+                <button onclick="ACTIONS.updateSize()">Update Board Size</button>
+                <button id="clear-board" onclick="ACTIONS.clearBoard()">Clear Board</button>
+            </div>
 
-    <div id="grid-controls">
-        <span id="grid-size">
-            <label for="width">
-                Board Width:
-                <input id="width" type="number" value="150" onchange="updateWidth(event.target.value)" />
-            </label>
-            <label for="height">
-                Board Height:
-                <input id="height" type="number" value="150" onchange="updateHeight(event.target.value)" />
-            </label>
-        </span>
+            <br>
 
-        <button onclick="clearBoard()">Clear Board</button>
+            <span id="grid-library">
+                <label for="pattern-name">
+                    Pattern Name:
+                    <input id="pattern-name" type="text" />
+                </label>
+                <button onclick="savePattern()">Save Current Board</button>
+                <label for="pattern-menu">
+                    Saved Patterns:
+                    <select id="pattern-menu" onfocus="getPatterns()" onblur="loadPattern(event.target.value)">
+                        <option disabled selected value="">No patterns available</option>
+                    </select>
+                </label>
+            </span>
+        </div>
 
-        <span id="grid-run">
-            <button onclick="back()">&lt;&lt;&lt;</button>
-            <button onclick="step()">&gt;&gt;&gt;</button>
-        </span>
+        <div id="game-buttons">
+            <button onclick="ACTIONS.back()">&lt;&lt;&lt;</button>
+            <button onclick="ACTIONS.tick()">&gt;&gt;&gt;</button>
+        </div>
 
-        <span id="grid-library">
-            <label for="pattern-name">
-                Pattern Name:
-                <input id="pattern-name" type="text" onchange="updatePatternName(event.target.value)" />
-            </label>
-            <button onclick="savePattern()">Save Board</button>
-            <label for="pattern-menu" onchange="loadBoard(event.target.value)">
-                Load Pattern:
-                <select id="pattern-menu">
-                </select>
-            </label>
-        </span>
+        <div id="game-stats">
+            Generation: <span id="gen-counter">0</span>
+            <br>
+            Population: <span id="pop-counter">0</span>
+        </div>
+
+        <div id="grid">
+        </div>
     </div>
 
-    <div id="grid">
-    </div>
 
     <hr />
     <table>
@@ -127,87 +138,41 @@
     </table>
 
     <script src="points.js" asp-append-version="true"></script>
+    <script src="game.js" asp-append-version="true"></script>
     <script src="grid.js" asp-append-version="true"></script>
+    <script src="api.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
+
     <script type="text/javascript">
-
-        const GRID = new SmartGrid();
-        let patternName = '';
-        const lifeUri = 'api/Patterns';
-
-        function menuOption(patternId, patternName) {
-            const option = document.createElement('option');
-            option.value = patternId;
-            option.textContent = patternName;
-            return option;
-        }
-
-        function addMenuOption(menu, pattern) {
-            menu.appendChild(menuOption(pattern.id, pattern.name));
-        }
-
-        function getPatternNames() {
-            const menu = document.getElementById('pattern-menu');
-            menu.innerHTML = '';
-            fetch(`${lifeUri}/`)
-                .then(response => response.json())
-                .then(data => { data.forEach(pattern => addMenuOption(menu, pattern)) });
-        }
-
-        function loadBoard(id) {
-            fetch(`${lifeUri}/${id}`)
-                .then(response => response.json())
-                .then(data => GRID.previewPattern = data);
-        }
-
-        function saveBoard(name, liveCells) {
-            const body = JSON.stringify({ id: 0, name, creator: "Anonymouse", points: liveCells });
-            fetch(`${lifeUri}/`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: body
-            })
-                .then(response => response.json())
-                .then(pattern => addMenuOption(document.getElementById('pattern-menu'), pattern))
-                .catch(error => console.error("Unable to save board. ", error));
-        }
+        const ACTIONS = new SiteActions();
 
         window.onkeydown = function (event) {
-            if (event.keyCode === 39) { step(); }
-            if (event.keyCode === 37) { back(); }
-        }
+            if (event.keyCode === 39) { ACTIONS.tick(); }
+            if (event.keyCode === 37) { ACTIONS.back(); }
+            if (event.keyCode === 27) { ACTIONS.resetCellEventHandlers() }
+        };
 
-        function updatePatternName(name) {
-            patternName = name;
+        function getPatterns() {
+            apiGetAllPatterns()
+                .then(patterns => ACTIONS.setupMenu(patterns));
         }
 
         function savePattern() {
-            if (!patternName || patternName === '') {
-                return window.alert("Cannot save board without pattern name.");
-            }
-            if (GRID.hasCells) {
-                saveBoard(patternName, GRID.normalizedCells);
+            const { name, creator, points } = ACTIONS.validatePattern();
+            apiSavePattern(name, creator, points)
+                .then(pattern => console.dir(pattern))
+                .catch(error => console.error(`Unable to save pattern ${name}. `, error));
+        }
+
+        function loadPattern(id) {
+            if (id) {
+                apiLoadPattern(id)
+                    .then(pattern => ACTIONS.setPreviewPattern(pattern))
+                    .catch(error => console.error(`Unable to load pattern ${id}. `, error));
             } else {
-                return window.alert("Board cannot be empty.")
+                ACTIONS.resetCellEventHandlers();
             }
         }
-
-        function clearBoard() { GRID.eraseGrid() }
-
-        function step() { GRID.step() }
-        function back() { GRID.back() }
-
-        function updateWidth(width) {
-            GRID.updateWidth(width);
-        }
-        function updateHeight(height) {
-            GRID.updateHeight(height);
-        }
-
-        getPatternNames();
     </script>
 </body>
 

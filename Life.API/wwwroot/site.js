@@ -1,164 +1,168 @@
-﻿// // const lifeUri = 'api/Patterns';
+﻿class SiteActions {
+    menuSelect = document.getElementById('pattern-menu');
+    sizeInputs = {
+        width: document.getElementById('width'),
+        height: document.getElementById('height')
+    }
+    patternNameInput = document.getElementById('pattern-name');
+    generationCounter = document.getElementById('gen-counter');
+    populationCounter = document.getElementById('pop-counter');
+    game;
+    grid;
 
-// // function getPatternNames() {
-// //     fetch(`${lifeUri}/`)
-// //         .then(response => response.json())
-// //         .then(data => console.dir(data));
-// // }
+    constructor() {
+        this.game = new Game(this.size);
+        this.grid = new Grid(this.size);
+        this.resetCellClickHandler();
+    }
 
-// // function loadBoard(id) {
-// //     fetch(`${lifeUri}/${id}`)
-// //         .then(response => response.json())
-// //         .then(data => console.dir(data));
-// // }
+    get generationCount() {
+        return parseInt(this.generationCounter.textContent);
+    }
+    set generationCount(value) {
+        this.generationCounter.textContent = value;
+    }
 
-// // function saveBoard(name, liveCells) {
-// //     const body = JSON.stringify({ id: 0, name, creator: "Anonymouse", points: liveCells });
-// //     console.dir(body);
-// //     fetch(`${lifeUri}/`, {
-// //         method: 'POST',
-// //         headers: {
-// //             'Accept': 'application/json',
-// //             'Content-Type': 'application/json'
-// //         },
-// //         body: body
-// //     }).then(response => response.json()).then(x => console.dir(x)).catch(error => console.error("Unable to save board. ", error));
-// // }
+    get populationCount() {
+        return parseInt(this.populationCounter.textContent);
+    }
+    set populationCount(value) {
+        this.populationCounter.textContent = value;
+    }
 
-// class LifeModel {
-//     id = 0;
-//     name = '';
-//     points = [];
-//     creator = 'Anonymouse';
-//     constructor(id, name, points) {
-//         this.id = id;
-//         this.name = name;
-//         this.points = points;
-//     }
-// }
+    get size() {
+        const { height, width } = this.sizeInputs;
+        return {
+            x: parseInt(height.value),
+            y: parseInt(width.value)
+        }
+    }
 
-// const uri = 'api/todoitems';
-// let todos = [];
+    get patternName() {
+        return this.patternNameInput.value;
+    }
 
-// function getItems() {
-//     fetch(uri)
-//         .then(response => response.json())
-//         .then(data => _displayItems(data))
-//         .catch(error => console.error('Unable to get items.', error));
-// }
+    get patternId() {
+        return this.menuSelect.value;
+    }
 
-// function addItem() {
-//     const addNameTextbox = document.getElementById('add-name');
+    get isEmpty() {
+        return !this.game.hasCells;
+    }
 
-//     const item = {
-//         isComplete: false,
-//         name: addNameTextbox.value.trim()
-//     };
+    get currentPattern() {
+        return this.game.normalizedCells;
+    }
 
-//     fetch(uri, {
-//         method: 'POST',
-//         headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify(item)
-//     })
-//         .then(response => response.json())
-//         .then(() => {
-//             getItems();
-//             addNameTextbox.value = '';
-//         })
-//         .catch(error => console.error('Unable to add item.', error));
-// }
+    validatePattern() {
+        if (this.isEmpty) return window.alert("Pattern cannot be empty.");
+        const name = this.patternName;
+        if (!name) return window.alert("Pattern must have a name.");
+        return { name, points: this.currentPattern };
+    }
 
-// function deleteItem(id) {
-//     fetch(`${uri}/${id}`, {
-//         method: 'DELETE'
-//     })
-//         .then(() => getItems())
-//         .catch(error => console.error('Unable to delete item.', error));
-// }
+    clearBoard() {
+        this.game.clear();
+        this.grid.clear();
+        this.generationCount = 0;
+        this.populationCount = 0;
+    }
 
-// function displayEditForm(id) {
-//     const item = todos.find(item => item.id === id);
+    updateSize() {
+        this.game.setSize(this.size);
+        this.grid.setSize(this.size);
+        this.populationCount = 0;
+        for (let { x, y } of this.game.liveCells) {
+            this.grid.addCell(x, y);
+            this.populationCount += 1;
+        }
+        this.resetCellClickHandler();
+    }
 
-//     document.getElementById('edit-name').value = item.name;
-//     document.getElementById('edit-id').value = item.id;
-//     document.getElementById('edit-isComplete').checked = item.isComplete;
-//     document.getElementById('editForm').style.display = 'block';
-// }
+    tick() {
+        for (let { x, y } of this.game.tick()) {
+            this.toggleCell(x, y);
+        }
+        this.generationCount += 1;
+    }
 
-// function updateItem() {
-//     const itemId = document.getElementById('edit-id').value;
-//     const item = {
-//         id: parseInt(itemId, 10),
-//         isComplete: document.getElementById('edit-isComplete').checked,
-//         name: document.getElementById('edit-name').value.trim()
-//     };
+    back() {
+        for (let { x, y } of this.game.back()) {
+            this.toggleCell(x, y);
+        }
+        if (this.generationCount) {
+            this.generationCount -= 1;
+        }
+    }
 
-//     fetch(`${uri}/${itemId}`, {
-//         method: 'PUT',
-//         headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify(item)
-//     })
-//         .then(() => getItems())
-//         .catch(error => console.error('Unable to update item.', error));
+    addCell(x, y) {
+        this.game.addCell({ x, y });
+        this.grid.addCell(x, y);
+        this.populationCount += 1;
+    }
 
-//     closeInput();
+    removeCell(x, y) {
+        this.game.removeCell({ x, y });
+        this.grid.removeCell(x, y);
+        this.populationCount -= 1;
+    }
 
-//     return false;
-// }
+    toggleCell(x, y) {
+        if (this.game.hasCell({ x, y })) {
+            this.removeCell(x, y);
+        } else {
+            this.addCell(x, y);
+        }
+    }
 
-// function closeInput() {
-//     document.getElementById('editForm').style.display = 'none';
-// }
+    setPreviewPattern(pattern) {
+        if (pattern) {
+            const { points } = pattern;
 
-// function _displayCount(itemCount) {
-//     const name = (itemCount === 1) ? 'to-do' : 'to-dos';
+            this.grid.onCellHover(
+                (x, y) => () => {
+                    this.grid.previewPattern(points, x, y, true)
+                },
+                (x, y) => () => {
+                    this.grid.previewPattern(points, x, y, false)
+                }
+            );
 
-//     document.getElementById('counter').innerText = `${itemCount} ${name}`;
-// }
+            this.grid.onCellClick(
+                (x, y) => () => {
+                    const newCells = this.grid.translatePattern(points, x, y)
+                        .filter(p => !this.game.hasCell(p));
+                    for (let cell of newCells) {
+                        this.addCell(cell.x, cell.y)
+                    }
+                    this.resetCellEventHandlers();
+                    this.menuSelect.value = null;
+                }
+            );
+        }
+    }
 
-// function _displayItems(data) {
-//     const tBody = document.getElementById('todos');
-//     tBody.innerHTML = '';
+    resetCellEventHandlers() {
+        this.resetCellClickHandler();
+        this.grid.resetCellHover();
+    }
 
-//     _displayCount(data.length);
+    resetCellClickHandler() {
+        this.grid.onCellClick((x, y) => () => { this.toggleCell(x, y); });
+    }
 
-//     const button = document.createElement('button');
+    setupMenu(patterns = []) {
+        this.menuSelect.innerHTML = '';
+        this.menuSelect.appendChild(null, '--Select a pattern--');
+        for (let pattern of patterns) {
+            this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
+        }
+    }
+}
 
-//     data.forEach(item => {
-//         let isCompleteCheckbox = document.createElement('input');
-//         isCompleteCheckbox.type = 'checkbox';
-//         isCompleteCheckbox.disabled = true;
-//         isCompleteCheckbox.checked = item.isComplete;
-
-//         let editButton = button.cloneNode(false);
-//         editButton.innerText = 'Edit';
-//         editButton.setAttribute('onclick', `displayEditForm(${item.id})`);
-
-//         let deleteButton = button.cloneNode(false);
-//         deleteButton.innerText = 'Delete';
-//         deleteButton.setAttribute('onclick', `deleteItem(${item.id})`);
-
-//         let tr = tBody.insertRow();
-
-//         let td1 = tr.insertCell(0);
-//         td1.appendChild(isCompleteCheckbox);
-
-//         let td2 = tr.insertCell(1);
-//         let textNode = document.createTextNode(item.name);
-//         td2.appendChild(textNode);
-
-//         let td3 = tr.insertCell(2);
-//         td3.appendChild(editButton);
-
-//         let td4 = tr.insertCell(3);
-//         td4.appendChild(deleteButton);
-//     });
-
-//     todos = data;
-// }
+function menuOption(patternId, patternName) {
+    const option = document.createElement('option');
+    option.value = patternId;
+    option.textContent = patternName;
+    return option;
+}
