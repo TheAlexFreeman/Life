@@ -9,11 +9,15 @@
     populationCounter = document.getElementById('pop-counter');
     game;
     grid;
+    isDirty = false;
 
     constructor() {
         this.game = new Game(this.size);
         this.grid = new Grid(this.size);
-        this.resetCellClickHandler();
+        this.resetCellEventHandlers();
+        document.getElementById('grid-library').onmouseout = () => {
+            this.menuSelect.blur();
+        }
     }
 
     get generationCount() {
@@ -76,7 +80,7 @@
             this.grid.addCell(x, y);
             this.populationCount += 1;
         }
-        this.resetCellClickHandler();
+        this.resetCellEventHandlers();
     }
 
     tick() {
@@ -84,15 +88,18 @@
             this.toggleCell(x, y);
         }
         this.generationCount += 1;
+        this.isDirty = false;
     }
 
     back() {
-        for (let { x, y } of this.game.back()) {
+        const { changes, dirty } = this.game.back();
+        for (let { x, y } of changes) {
             this.toggleCell(x, y);
         }
-        if (this.generationCount) {
+        if (!dirty && this.generationCount) {
             this.generationCount -= 1;
         }
+        this.isDirty = false;
     }
 
     addCell(x, y) {
@@ -130,10 +137,15 @@
 
             this.grid.onCellClick(
                 (x, y) => () => {
-                    const newCells = this.grid.translatePattern(points, x, y)
-                        .filter(p => !this.game.hasCell(p));
-                    for (let cell of newCells) {
-                        this.addCell(cell.x, cell.y)
+                    this.isDirty = true;
+                    this.grid.previewPattern(points, x, y, false);
+                    const pattern = this.grid.translatePattern(points, x, y);
+                    const newCells = pattern.filter(p => !this.game.hasCell(p));
+                    if (newCells.length) {
+                        this.game.memory.push([null, ...newCells]);
+                        for (let cell of newCells) {
+                            this.addCell(cell.x, cell.y)
+                        }
                     }
                     this.resetCellEventHandlers();
                     this.menuSelect.value = null;
@@ -148,14 +160,27 @@
     }
 
     resetCellClickHandler() {
-        this.grid.onCellClick((x, y) => () => { this.toggleCell(x, y); });
+        this.grid.onCellClick((x, y) => () => {
+            this.toggleCell(x, y);
+            const memory = this.game.memory;
+            if (this.isDirty) {
+                memory[memory.length - 1].push({ x, y });
+            } else {
+                this.isDirty = true;
+                memory.push([null, { x, y }]);
+            }
+        });
+    }
+
+    addMenuOption(pattern) {
+        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
     }
 
     setupMenu(patterns = []) {
         this.menuSelect.innerHTML = '';
-        this.menuSelect.appendChild(null, '--Select a pattern--');
+        this.menuSelect.appendChild(menuOption(null, '--Select a pattern--'));
         for (let pattern of patterns) {
-            this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
+            this.addMenuOption(pattern);
         }
     }
 }

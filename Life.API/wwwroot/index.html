@@ -146,6 +146,8 @@
     <script type="text/javascript">
         const ACTIONS = new SiteActions();
 
+        getPatterns();
+
         window.onkeydown = function (event) {
             if (event.keyCode === 39) { ACTIONS.tick(); }
             if (event.keyCode === 37) { ACTIONS.back(); }
@@ -160,12 +162,12 @@
         function savePattern() {
             const { name, creator, points } = ACTIONS.validatePattern();
             apiSavePattern(name, creator, points)
-                .then(pattern => console.dir(pattern))
+                .then(pattern => ACTIONS.addMenuOption(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
         }
 
         function loadPattern(id) {
-            if (id) {
+            if (parseInt(id)) {
                 apiLoadPattern(id)
                     .then(pattern => ACTIONS.setPreviewPattern(pattern))
                     .catch(error => console.error(`Unable to load pattern ${id}. `, error));

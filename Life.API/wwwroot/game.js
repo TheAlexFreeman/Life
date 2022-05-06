@@ -81,9 +81,14 @@ class Game {
 
     back() {
         if (this.memory.length) {
-            return this.memory.pop();
+            const changes = this.memory.pop();
+            if (changes[0]) {
+                return { changes, dirty: false };
+            }
+            changes.shift();
+            return { changes, dirty: true };
         }
-        return [];
+        return { changes: [], dirty: true };
     }
 
     toggleCell(p) {

@@ -22,6 +22,7 @@ class Grid {
 
     constructor(size, cells = []) {
         this.root = document.getElementById('grid');
+        this.root.onkeydown = () => console.log("HELLO");
         this.setSize(size);
         cells.forEach(({ x, y }) => {
             if (x < size.x && y < size.y) {
@@ -55,9 +56,6 @@ class Grid {
         const row = create('div', 'row');
         for (let y = 0; y < size; y++) {
             const cell = create('span', 'cell');
-            cell.onmouseover = () => { cell.style.opacity = 0.5; }
-            cell.onmouseout = () => { cell.style.opacity = 1.0; }
-            cell.onclick = () => { this.toggleCell(x, y); }
             row.appendChild(cell);
             this._grid[x].push({ element: cell, isAlive: false });
         }
@@ -82,7 +80,7 @@ class Grid {
 
     removeCell(x, y) {
         const cell = this._grid[x][y];
-        cell.isALive = false;
+        cell.isAlive = false;
         cell.element.style.backgroundColor = COLORS.OFF;
     }
 
@@ -113,8 +111,8 @@ class Grid {
     previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
         if (on) {
-            cell.element.style.opacity = 0.9
-            cell.element.backgroundColor = COLORS.ON;
+            cell.element.style.opacity = 0.75
+            cell.element.style.backgroundColor = COLORS.ON;
         } else {
             normalizeCellColor(cell);
         }
@@ -131,9 +129,11 @@ class Grid {
     resetCellHover() {
         for (let x = 0; x < this.size.x; x++) {
             for (let y = 0; y < this.size.y; y++) {
-                let cell = this._grid[x][y].element
-                cell.onmouseover = () => { cell.style.opacity = 0.5; };
-                cell.onmouseout = () => { cell.style.opacity = 1.0; };
+                let cell = this._grid[x][y]
+                let { element } = cell;
+                element.onmouseover = () => { element.style.opacity = 0.5; };
+                element.onmouseout = () => { element.style.opacity = 1.0; };
+                normalizeCellColor(cell)
             }
         }
     }
@@ -142,8 +142,14 @@ class Grid {
         for (let x = 0; x < this.size.x; x++) {
             for (let y = 0; y < this.size.y; y++) {
                 let cell = this._grid[x][y].element
-                cell.onmouseover = mouseOver(x, y);
-                cell.onmouseout = mouseOut(x, y);
+                cell.onmouseover = () => {
+                    cell.style.opacity = 0.5;
+                    mouseOver(x, y)();
+                }
+                cell.onmouseout = () => {
+                    cell.style.opacity = 1.0;
+                    mouseOut(x, y)();
+                }
             }
         }
     }
