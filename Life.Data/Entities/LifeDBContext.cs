@@ -30,11 +30,11 @@ namespace Life.Data.Entities
 
                 entity.Property(e => e.Id).HasColumnName("ID");
 
-                entity.Property(e => e.Creator).HasMaxLength(64);
+                entity.Property(e => e.Creator).HasMaxLength(32);
 
                 entity.Property(e => e.DateCreated).HasDefaultValueSql("(sysdatetime())");
 
-                entity.Property(e => e.Name).HasMaxLength(64);
+                entity.Property(e => e.Name).HasMaxLength(32);
             });
 
             modelBuilder.Entity<Point>(entity =>
@@ -51,8 +51,8 @@ namespace Life.Data.Entities
                 entity.HasOne(d => d.Pattern)
                     .WithMany(p => p.Points)
                     .HasForeignKey(d => d.PatternId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Points_PatternID_to_Patterns");
+                    .HasConstraintName("FK_Points_PatternID_to_Patterns")
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             OnModelCreatingPartial(modelBuilder);

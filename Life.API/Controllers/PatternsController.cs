@@ -24,12 +24,7 @@ namespace Life.API.Controllers
         [HttpGet]
         public IEnumerable<ApiPattern> Get()
         {
-            return _repo.GetAllPatterns().Select(p => new ApiPattern {
-                Id = p.Id,
-                Name = p.Name,
-                Creator = p.Creator,
-                DateCreated  = p.DateCreated
-            });
+            return _repo.GetAllPatterns().Select(p => new ApiPattern(p));
         }
 
         // GET api/<PatternsController>/5
@@ -50,6 +45,8 @@ namespace Life.API.Controllers
         [HttpPost]
         public ApiPattern Post([FromBody] ApiPattern pattern)
         {
+            if (pattern == null) return null;
+
             var newPattern = new Pattern();
             newPattern.Name = pattern.Name;
             newPattern.Creator = pattern.Creator;
@@ -76,6 +73,9 @@ namespace Life.API.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            var success = _repo.DeletePattern(id);
+            if (!success) throw new Exception("Could not delete Pattern #" + id);
+
         }
     }
 }

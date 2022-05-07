@@ -1,4 +1,5 @@
 ﻿using Life.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Life.Data.Repositories
 {
     public class PatternRepository
     {
-        private LifeDBContext _context;
+        private readonly LifeDBContext _context;
         public PatternRepository(LifeDBContext context)
         {
             _context = context;
@@ -19,15 +20,10 @@ namespace Life.Data.Repositories
             return _context.Patterns;
         }
 
-        public Pattern GetPatternById(int id)
+        public Pattern? GetPatternById(int id)
         {
-            var result = _context.Patterns.FirstOrDefault(p => p.Id == id);
-            if (result == null) return null;
-
-            foreach (var point in _context.Points.Where(p => p.PatternId == id))
-            {
-                result.Points.Add(point);
-            }
+            var result = _context.Patterns.Include(p => p.Points)
+                .FirstOrDefault(p => p.Id == id);
             return result;
         }
 
@@ -35,14 +31,15 @@ namespace Life.Data.Repositories
         {
             _context.Patterns.Add(pattern);
             _context.SaveChanges();
-
-            //foreach (var point in pattern.Points)
-            //{
-            //    point.PatternId = pattern.Id;
-            //    _context.Points.Add(point);
-            //}
-            //_context.SaveChanges();
             return pattern;
+        }
+
+        public bool DeletePattern(int id)
+        {
+            var pattern = _context.Patterns.FirstOrDefault(p => p.Id == id);
+            if (pattern == null) return false;
+            _context.Patterns.Remove(pattern);
+            return true;
         }
     }
 }

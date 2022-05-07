@@ -61,8 +61,9 @@
     validatePattern() {
         if (this.isEmpty) return window.alert("Pattern cannot be empty.");
         const name = this.patternName;
+        const creator = this.creatorName || "Anonymouse";
         if (!name) return window.alert("Pattern must have a name.");
-        return { name, points: this.currentPattern };
+        return { name, creator, points: this.currentPattern };
     }
 
     clearBoard() {
