@@ -8,19 +8,52 @@ class Grid {
     colors = { on: 'limegreen', off: 'lightgray' };
     root;
     size;
+    hasBorders = false;
     _grid;
 
-    constructor(size, colors, cells = []) {
+    constructor(size, colors, borders = false, cells = []) {
         this.root = document.getElementById('grid');
-        this.root.onkeydown = () => console.log("HELLO");
         this.colors = colors;
         this.setSize(size);
+        this.setBorders(borders);
 
         cells.forEach(({ x, y }) => {
             if (x < size.x && y < size.y) {
                 this.toggleCell(x, y)
             }
         });
+    }
+
+    setBorders(on = false) {
+        const value = on ? "1px solid black" : "1px dashed gray";
+        this.setBorderTop(value);
+        this.setBorderBottom(value);
+        this.setBorderLeft(value);
+        this.setBorderRight(value);
+    }
+
+    setBorderTop(value) {
+        for (let cell of this._grid[0]) {
+            cell.element.style.borderTop = value;
+        }
+    }
+
+    setBorderBottom(value) {
+        for (let cell of this._grid[this.size.x - 1]) {
+            cell.element.style.borderBottom = value;
+        }
+    }
+
+    setBorderLeft(value) {
+        for (let row of this._grid) {
+            row[0].element.style.borderLeft = value;
+        }
+    }
+
+    setBorderRight(value) {
+        for (let row of this._grid) {
+            row[this.size.y - 1].element.style.borderRight = value;
+        }
     }
 
     setColors(colors) {
@@ -132,7 +165,13 @@ class Grid {
     }
 
     translatePattern(points, dx = 0, dy = 0) {
-        return points.map(p => this.ptAdd(p, { x: dx, y: dy }));
+        const pattern = points.map(p => this.ptAdd(p, { x: dx, y: dy }));
+        return this.hasBorders ? pattern.filter(p => this.inBounds(p)) : pattern;
+    }
+
+    inBounds(point) {
+        return point.x >= 0 && point.y >= 0 &&
+            point.x < this.size.x && point.y < this.size.y;
     }
 
     ptAdd(p1, p2) {

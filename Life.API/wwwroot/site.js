@@ -8,6 +8,7 @@
         on: document.getElementById('cell-color'),
         off: document.getElementById('background-color')
     }
+    borderCheckbox = document.getElementById('borders');
     patternNameInput = document.getElementById('pattern-name');
     generationCounter = document.getElementById('gen-counter');
     populationCounter = document.getElementById('pop-counter');
@@ -94,6 +95,11 @@
             this.populationCount += 1;
         }
         this.resetCellEventHandlers();
+    }
+
+    updateBorders(borders = false) {
+        this.game.setBorders(borders);
+        this.grid.setBorders(borders);
     }
 
     updateColors(colors) {

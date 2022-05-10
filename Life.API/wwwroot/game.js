@@ -1,11 +1,14 @@
 class Game {
     size;
+    hasBorders = false;
     memory = [];
     _liveCells = new Points();
     _relevantCells = new Points();
 
-    constructor(size, cells = []) {
+    constructor(size, borders = false, cells = []) {
         this.size = size;
+        this.hasBorders = borders;
+        this.setBorders(borders);
         cells.forEach(p => {
             if (p.x < size.x && p.y < size.y) {
                 this.addCell(p)
@@ -39,6 +42,12 @@ class Game {
         this._relevantCells = this._relevantCells.onBoard(size);
     }
 
+    setBorders(on = false) {
+        this.neighbors = on ?
+            (point) => neighbors(point).filter(p => this.inBounds(p)) :
+            (point) => neighbors(point).map(p => this.mod(p));
+    }
+
     clear() {
         this._liveCells.clear();
         this._relevantCells.clear();
@@ -66,9 +75,11 @@ class Game {
         return this.neighbors(point).filter(p => this.hasCell(p)).length;
     }
 
-    neighbors(point) {
-        // TODO: Toggle borders on/off (edit mod?)
-        return neighbors(point).map(p => this.mod(p));
+    neighbors = (point) => neighbors(point).map(p => this.mod(p));
+
+    inBounds(point) {
+        return point.x >= 0 && point.y >= 0 &&
+            point.x < this.size.x && point.y < this.size.y;
     }
 
     mod(point) {
