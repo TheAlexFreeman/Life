@@ -117,6 +117,17 @@
                     </select>
                 </label>
             </span>
+
+            <span id="grid-colors">
+                <label for="cell-color">
+                    Cell Color: <input id="cell-color" type="color" value="#32cd32"
+                        onchange="ACTIONS.updateCellColor(event.target.value)" />
+                </label>
+                <label for="background-color">
+                    Background Color: <input id="background-color" type="color" value="#d3d3d3"
+                        onchange="ACTIONS.updateBackgroundColor(event.target.value)" />
+                </label>
+            </span>
         </div>
 
         <div id="game-buttons">

@@ -4,6 +4,10 @@
         width: document.getElementById('width'),
         height: document.getElementById('height')
     }
+    colorInputs = {
+        on: document.getElementById('cell-color'),
+        off: document.getElementById('background-color')
+    }
     patternNameInput = document.getElementById('pattern-name');
     generationCounter = document.getElementById('gen-counter');
     populationCounter = document.getElementById('pop-counter');
@@ -13,7 +17,7 @@
 
     constructor() {
         this.game = new Game(this.size);
-        this.grid = new Grid(this.size);
+        this.grid = new Grid(this.size, this.colors);
         this.resetCellEventHandlers();
         document.getElementById('grid-library').onmouseout = () => {
             this.menuSelect.blur();
@@ -39,6 +43,14 @@
         return {
             x: parseInt(height.value),
             y: parseInt(width.value)
+        }
+    }
+
+    get colors() {
+        const { on, off } = this.colorInputs;
+        return {
+            on: on.value,
+            off: off.value
         }
     }
 
@@ -82,6 +94,18 @@
             this.populationCount += 1;
         }
         this.resetCellEventHandlers();
+    }
+
+    updateColors(colors) {
+        this.grid.setColors(colors);
+    }
+
+    updateCellColor(color) {
+        this.grid.setCellColor(color);
+    }
+
+    updateBackgroundColor(color) {
+        this.grid.setBackgroundColor(color);
     }
 
     tick() {

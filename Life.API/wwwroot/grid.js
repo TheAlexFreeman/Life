@@ -4,31 +4,54 @@ function create(tagName = 'div', className = '') {
     return el;
 }
 
-const COLORS = {
-    ON: 'limegreen',
-    OFF: 'lightgray'
-}
-
-function normalizeCellColor(cell) {
-    cell.element.style.opacity = 1.0;
-    cell.element.style.backgroundColor =
-        cell.isAlive ? COLORS.ON : COLORS.OFF;
-}
-
 class Grid {
+    colors = { on: 'limegreen', off: 'lightgray' };
     root;
     size;
     _grid;
 
-    constructor(size, cells = []) {
+    constructor(size, colors, cells = []) {
         this.root = document.getElementById('grid');
         this.root.onkeydown = () => console.log("HELLO");
+        this.colors = colors;
         this.setSize(size);
+
         cells.forEach(({ x, y }) => {
             if (x < size.x && y < size.y) {
                 this.toggleCell(x, y)
             }
         });
+    }
+
+    setColors(colors) {
+        this.colors = colors;
+        for (let row of this._grid) {
+            for (let cell of row) {
+                this.normalizeCellColor(cell);
+            }
+        }
+    }
+
+    setCellColor(color) {
+        this.colors.on = color;
+        for (let row of this._grid) {
+            for (let cell of row) {
+                if (cell.isAlive) {
+                    cell.element.style.backgroundColor = color;
+                }
+            }
+        }
+    }
+
+    setBackgroundColor(color) {
+        this.colors.off = color;
+        for (let row of this._grid) {
+            for (let cell of row) {
+                if (!cell.isAlive) {
+                    cell.element.style.backgroundColor = color;
+                }
+            }
+        }
     }
 
     clear() {
@@ -75,19 +98,31 @@ class Grid {
     addCell(x, y) {
         const cell = this._grid[x][y];
         cell.isAlive = true;
-        cell.element.style.backgroundColor = COLORS.ON;
+        cell.element.style.backgroundColor = this.colors.on;
+    }
+
+    removeCells(cells) {
+        for (let { x, y } of cells) {
+            this.removeCell(x, y);
+        }
     }
 
     removeCell(x, y) {
         const cell = this._grid[x][y];
         cell.isAlive = false;
-        cell.element.style.backgroundColor = COLORS.OFF;
+        cell.element.style.backgroundColor = this.colors.off;
     }
 
     toggleCell(x, y) {
         const cell = this._grid[x][y];
         cell.isAlive = !cell.isAlive;
-        normalizeCellColor(cell);
+        this.normalizeCellColor(cell);
+    }
+
+    normalizeCellColor(cell) {
+        cell.element.style.opacity = 1.0;
+        cell.element.style.backgroundColor =
+            cell.isAlive ? this.colors.on : this.colors.off;
     }
 
     previewPattern(points, dx = 0, dy = 0, on = true) {
@@ -111,10 +146,11 @@ class Grid {
     previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
         if (on) {
-            cell.element.style.opacity = 0.75
-            cell.element.style.backgroundColor = COLORS.ON;
+            cell.element.style.opacity = 0.75;
+            cell.element.style.backgroundColor = this.colors.on;
         } else {
-            normalizeCellColor(cell);
+            cell.element.style.opacity = 1.0;
+            this.normalizeCellColor(cell);
         }
     }
 
@@ -127,13 +163,13 @@ class Grid {
     }
 
     resetCellHover() {
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++) {
-                let cell = this._grid[x][y]
+        for (let row of this._grid) {
+            for (let cell of row) {
                 let { element } = cell;
                 element.onmouseover = () => { element.style.opacity = 0.5; };
                 element.onmouseout = () => { element.style.opacity = 1.0; };
-                normalizeCellColor(cell)
+                element.style.opacity = 1.0;
+                this.normalizeCellColor(cell)
             }
         }
     }
