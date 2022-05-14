@@ -98,6 +98,28 @@ class Points {
         return result;
     }
 
+    map(func = p => p) {
+        const result = [];
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                result.push(func({ x, y }));
+            }
+        }
+        return result;
+    }
+
+    filter(pred = _ => true) {
+        const result = [];
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                if (pred({ x, y })) {
+                    result.push({ x, y });
+                }
+            }
+        }
+        return result;
+    }
+
     inBox(min = ORIGIN, max = ORIGIN) {
         const result = new Points();
         for (let [x, ys] of this._map) {

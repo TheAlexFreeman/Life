@@ -26,33 +26,24 @@ class Grid {
 
     setBorders(on = false) {
         const value = on ? "1px solid black" : "1px dashed gray";
-        this.setBorderTop(value);
-        this.setBorderBottom(value);
-        this.setBorderLeft(value);
-        this.setBorderRight(value);
+        this.setBordersTopBottom(value);
+        this.setBordersLeftRight(value);
     }
 
-    setBorderTop(value) {
-        for (let cell of this._grid[0]) {
-            cell.element.style.borderTop = value;
+    setBordersTopBottom(value) {
+        const topRow = this._grid[0];
+        const bottomRow = this.grid[this.size.x - 1];
+        for (let y = 0; y < this.size.y; y++) {
+            topRow[y].element.style.borderTop = value;
+            bottomRow[y].element.style.borderBottom = value;
         }
     }
 
-    setBorderBottom(value) {
-        for (let cell of this._grid[this.size.x - 1]) {
-            cell.element.style.borderBottom = value;
-        }
-    }
-
-    setBorderLeft(value) {
+    setBordersLeftRight(value) {
+        const y = this.size.y - 1;
         for (let row of this._grid) {
             row[0].element.style.borderLeft = value;
-        }
-    }
-
-    setBorderRight(value) {
-        for (let row of this._grid) {
-            row[this.size.y - 1].element.style.borderRight = value;
+            row[y].element.style.borderRight = value;
         }
     }
 

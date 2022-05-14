@@ -1,7 +1,6 @@
 class Game {
     size;
     hasBorders = false;
-    memory = [];
     _liveCells = new Points();
     _relevantCells = new Points();
 
@@ -14,10 +13,6 @@ class Game {
                 this.addCell(p)
             }
         });
-    }
-
-    get steps() {
-        return this.memory.length;
     }
 
     get hasCells() {
@@ -36,6 +31,11 @@ class Game {
         return this._liveCells.atOrigin;
     }
 
+    clear() {
+        this._liveCells.clear();
+        this._relevantCells.clear();
+    }
+
     setSize(size) {
         this.size = size;
         this._liveCells = this._liveCells.onBoard(size);
@@ -48,38 +48,38 @@ class Game {
             (point) => neighbors(point).map(p => this.mod(p));
     }
 
-    clear() {
-        this._liveCells.clear();
-        this._relevantCells.clear();
-        this.memory = [];
-    }
-
     tick() {
-        const changes = this._relevantCells.list.filter(p => this.needsUpdate(p));
-        if (changes.length) {
-            this.memory.push(changes);
-        }
-        return changes;
+        // TODO: Multicolor mode: Include color w/ each new cell
+        return this._relevantCells.filter(p => this.needsUpdate(p));
     }
 
     needsUpdate(point) {
-        let liveNeighborCount = this.countLiveNeighbors(point);
+        const liveNeighborCount = this.countLiveNeighbors(point);
         if (liveNeighborCount < 2) {
             this._relevantCells.remove(point);
         }
         if (this.hasCell(point)) return liveNeighborCount < 2 || liveNeighborCount > 3;
+        // TODO: Multicolor mode: compute color of new cell
         return liveNeighborCount === 3;
     }
 
     countLiveNeighbors(point) {
+        // TODO: Multicolor mode: return list of colors
         return this.neighbors(point).filter(p => this.hasCell(p)).length;
     }
 
     neighbors = (point) => neighbors(point).map(p => this.mod(p));
 
     inBounds(point) {
-        return point.x >= 0 && point.y >= 0 &&
-            point.x < this.size.x && point.y < this.size.y;
+        return this.inBoundsX(point) && this.inBoundsY(point);
+    }
+
+    inBoundsX(point) {
+        return point.x >= 0 && point.x < this.size.x;
+    }
+
+    inBoundsY(point) {
+        return point.y >= 0 && point.y < this.size.y;
     }
 
     mod(point) {
@@ -88,18 +88,6 @@ class Game {
             x: (x + point.x) % x,
             y: (y + point.y) % y
         }
-    }
-
-    back() {
-        if (this.memory.length) {
-            const changes = this.memory.pop();
-            if (changes[0]) {
-                return { changes, dirty: false };
-            }
-            changes.shift();
-            return { changes, dirty: true };
-        }
-        return { changes: [], dirty: true };
     }
 
     toggleCell(p) {

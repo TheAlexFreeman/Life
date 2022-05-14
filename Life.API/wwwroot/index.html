@@ -98,13 +98,13 @@
                     Board Height:
                     <input id="height" type="number" value="150" />
                 </label>
-                <button onclick="ACTIONS.updateSize()">Update Board Size</button>
-                <button id="clear-board" onclick="ACTIONS.clearBoard()">Clear Board</button>
+                <button onclick="updateSize()">Update Board Size</button>
+                <button id="clear-board" onclick="clearBoard()">Clear Board</button>
             </div>
 
             <br>
 
-            <span id="grid-library">
+            <span id="grid-library" onmouseout="INPUT.blurMenu()">
                 <label for="pattern-name">
                     Pattern Name:
                     <input id="pattern-name" type="text" />
@@ -112,35 +112,34 @@
                 <button onclick="savePattern()">Save Current Board</button>
                 <label for="pattern-menu">
                     Saved Patterns:
-                    <select id="pattern-menu" onfocus="getPatterns()" onblur="loadPattern(event.target.value)">
+                    <select id="pattern-menu" onfocus="getPatterns()" onblur="loadPattern()">
                         <option disabled selected value="">No patterns available</option>
                     </select>
                 </label>
             </span>
 
             <label for="borders"> Borders:
-                <input id="borders" type="checkbox" onchange="ACTIONS.updateBorders(event.target.checked)" />
+                <input id="borders" type="checkbox" onchange="updateBorders()" />
             </label>
 
             <span id="grid-colors">
                 <label for="cell-color">
-                    Cell Color: <input id="cell-color" type="color" value="#32cd32"
-                        onchange="ACTIONS.updateCellColor(event.target.value)" />
+                    Cell Color: <input id="cell-color" type="color" value="#32cd32" onchange="updateCellColor()" />
                 </label>
                 <label for="background-color">
                     Background Color: <input id="background-color" type="color" value="#d3d3d3"
-                        onchange="ACTIONS.updateBackgroundColor(event.target.value)" />
+                        onchange="updateBackgroundColor()" />
                 </label>
             </span>
         </div>
 
         <div id="game-buttons">
-            <button onclick="ACTIONS.back()">&lt;&lt;&lt;</button>
-            <button onclick="ACTIONS.tick()">&gt;&gt;&gt;</button>
+            <button onclick="back()">&lt;&lt;&lt;</button>
+            <button onclick="tick()">&gt;&gt;&gt;</button>
         </div>
 
         <div id="game-stats">
-            Generation: <span id="gen-counter">0</span>
+            Generations: <span id="gen-counter">0</span>
             <br>
             Population: <span id="pop-counter">0</span>
         </div>
@@ -172,34 +171,80 @@
     <script src="game.js" asp-append-version="true"></script>
     <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
+    <script src="input.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
-        const ACTIONS = new SiteActions();
+        const INPUT = new InputHandler();
+        const GAME = new Game(INPUT.size);
+        const GRID = new Grid(INPUT.size);
 
         getPatterns();
 
-        window.onkeydown = function (event) {
-            if (event.keyCode === 39) { ACTIONS.tick(); }
-            if (event.keyCode === 37) { ACTIONS.back(); }
-            if (event.keyCode === 27) { ACTIONS.resetCellEventHandlers() }
-        };
+        function clearBoard() {
+            INPUT.clear();
+            GAME.clear();
+            GRID.clear();
+        }
+
+        function updateSize() {
+            GAME.setSize(INPUT.size);
+            GRID.setSize(INPUT.size);
+        }
+
+        function updateCellColor() {
+            GRID.setCellColor(INPUT.cellColor);
+        }
+
+        function updateBackgroundColor() {
+            GRID.setBackgroundColor(INPUT.backgroundColor);
+        }
+
+        function updateBorders() {
+            GAME.setBorders(INPUT.borders);
+            GRID.setBorders(INPUT.borders);
+        }
+
+        function tick() {
+            const changes = GAME.tick();
+            MEMORY.addTick(changes);
+            for (let { x, y } of changes) {
+                GAME.toggleCell({ x, y });
+                GRID.toggleCell(x, y);
+            }
+        }
+
+        function back() {
+            const changes = MEMORY.back();
+            if (changes[0] === null) {
+                changes.shift();
+            }
+            for (let { x, y } of changes) {
+                GAME.toggleCell({ x, y });
+                GRID.toggleCell(x, y);
+            }
+        }
 
         function getPatterns() {
             apiGetAllPatterns()
-                .then(patterns => ACTIONS.setupMenu(patterns));
+                .then(patterns => INPUT.setupMenu(patterns));
         }
 
         function savePattern() {
-            const { name, creator, points } = ACTIONS.validatePattern();
+            const { name, creator, points } = INPUT.validatePattern();
             apiSavePattern(name, creator, points)
-                .then(pattern => ACTIONS.addMenuOption(pattern))
+                .then(pattern => INPUT.addMenuOption(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
         }
 
-        function loadPattern(id) {
-            if (parseInt(id)) {
+        function loadPattern() {
+            const id = INPUT.patternId;
+            if (id) {
                 apiLoadPattern(id)
+                    .then(pattern => {
+                        INPUT.previewPattern = pattern;
+                        ACTIONS.configureCellEventHandlers(INPUT.cellEventHandlers);
+                    })
                     .then(pattern => ACTIONS.setPreviewPattern(pattern))
                     .catch(error => console.error(`Unable to load pattern ${id}. `, error));
             } else {

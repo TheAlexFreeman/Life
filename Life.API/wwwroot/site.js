@@ -1,66 +1,72 @@
-﻿class SiteActions {
-    menuSelect = document.getElementById('pattern-menu');
-    sizeInputs = {
-        width: document.getElementById('width'),
-        height: document.getElementById('height')
+﻿class GameMemory {
+    past = [];
+    future = [];
+    isDirty = false;
+
+    constructor() { }
+
+    get isEmpty() {
+        return this.past.length === 0;
     }
-    colorInputs = {
-        on: document.getElementById('cell-color'),
-        off: document.getElementById('background-color')
+
+    get isCurrent() {
+        return this.future.length === 0;
     }
-    borderCheckbox = document.getElementById('borders');
-    patternNameInput = document.getElementById('pattern-name');
-    generationCounter = document.getElementById('gen-counter');
-    populationCounter = document.getElementById('pop-counter');
+
+    addTick(changes) {
+        this.isDirty = false;
+        this.past.push(changes);
+        this.generationCount += 1;
+    }
+
+    addEdit(changes) {
+        if (!this.isDirty) {
+            this.isDirty = true;
+            this.future = [];
+            this.past.push([]);
+        }
+        this.past[this.past.length - 1].push(...changes);
+    }
+
+    getNext() {
+        const [first, ...rest] = this.past;
+        return this.future.pop();
+    }
+
+    back() {
+        const last = this.past.pop();
+        if (last[0] === null) {
+            last.shift();
+            this.isDirty = false;
+        }
+        this.future.push(last);
+        return last;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class SiteActions {
     game;
     grid;
     isDirty = false;
 
-    constructor() {
-        this.game = new Game(this.size);
-        this.grid = new Grid(this.size, this.colors);
+    constructor(size, colors) {
+        this.game = new Game(size);
+        this.grid = new Grid(size, colors);
         this.resetCellEventHandlers();
-        document.getElementById('grid-library').onmouseout = () => {
-            this.menuSelect.blur();
-        }
-    }
-
-    get generationCount() {
-        return parseInt(this.generationCounter.textContent);
-    }
-    set generationCount(value) {
-        this.generationCounter.textContent = value;
-    }
-
-    get populationCount() {
-        return parseInt(this.populationCounter.textContent);
-    }
-    set populationCount(value) {
-        this.populationCounter.textContent = value;
-    }
-
-    get size() {
-        const { height, width } = this.sizeInputs;
-        return {
-            x: parseInt(height.value),
-            y: parseInt(width.value)
-        }
-    }
-
-    get colors() {
-        const { on, off } = this.colorInputs;
-        return {
-            on: on.value,
-            off: off.value
-        }
-    }
-
-    get patternName() {
-        return this.patternNameInput.value;
-    }
-
-    get patternId() {
-        return this.menuSelect.value;
     }
 
     get isEmpty() {
@@ -71,28 +77,16 @@
         return this.game.normalizedCells;
     }
 
-    validatePattern() {
-        if (this.isEmpty) return window.alert("Pattern cannot be empty.");
-        const name = this.patternName;
-        const creator = this.creatorName || "Anonymouse";
-        if (!name) return window.alert("Pattern must have a name.");
-        return { name, creator, points: this.currentPattern };
-    }
-
     clearBoard() {
         this.game.clear();
         this.grid.clear();
-        this.generationCount = 0;
-        this.populationCount = 0;
     }
 
-    updateSize() {
-        this.game.setSize(this.size);
-        this.grid.setSize(this.size);
-        this.populationCount = 0;
+    updateSize(size) {
+        this.game.setSize(size);
+        this.grid.setSize(size);
         for (let { x, y } of this.game.liveCells) {
             this.grid.addCell(x, y);
-            this.populationCount += 1;
         }
         this.resetCellEventHandlers();
     }
@@ -118,7 +112,6 @@
         for (let { x, y } of this.game.tick()) {
             this.toggleCell(x, y);
         }
-        this.generationCount += 1;
         this.isDirty = false;
     }
 
@@ -127,30 +120,27 @@
         for (let { x, y } of changes) {
             this.toggleCell(x, y);
         }
-        if (!dirty && this.generationCount) {
-            this.generationCount -= 1;
-        }
         this.isDirty = false;
-    }
-
-    addCell(x, y) {
-        this.game.addCell({ x, y });
-        this.grid.addCell(x, y);
-        this.populationCount += 1;
-    }
-
-    removeCell(x, y) {
-        this.game.removeCell({ x, y });
-        this.grid.removeCell(x, y);
-        this.populationCount -= 1;
     }
 
     toggleCell(x, y) {
         if (this.game.hasCell({ x, y })) {
             this.removeCell(x, y);
+            return -1;
         } else {
             this.addCell(x, y);
+            return 1;
         }
+    }
+
+    addCell(x, y) {
+        this.game.addCell({ x, y });
+        this.grid.addCell(x, y);
+    }
+
+    removeCell(x, y) {
+        this.game.removeCell({ x, y });
+        this.grid.removeCell(x, y);
     }
 
     setPreviewPattern(pattern) {
@@ -169,17 +159,15 @@
             this.grid.onCellClick(
                 (x, y) => () => {
                     this.isDirty = true;
-                    this.grid.previewPattern(points, x, y, false);
                     const pattern = this.grid.translatePattern(points, x, y);
                     const newCells = pattern.filter(p => !this.game.hasCell(p));
-                    if (newCells.length) {
+                    if (newCells.length && this.game.memory.length) {
                         this.game.memory.push([null, ...newCells]);
                         for (let cell of newCells) {
                             this.addCell(cell.x, cell.y)
                         }
                     }
                     this.resetCellEventHandlers();
-                    this.menuSelect.value = null;
                 }
             );
         }
@@ -203,22 +191,4 @@
         });
     }
 
-    addMenuOption(pattern) {
-        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
-    }
-
-    setupMenu(patterns = []) {
-        this.menuSelect.innerHTML = '';
-        this.menuSelect.appendChild(menuOption(null, '--Select a pattern--'));
-        for (let pattern of patterns) {
-            this.addMenuOption(pattern);
-        }
-    }
-}
-
-function menuOption(patternId, patternName) {
-    const option = document.createElement('option');
-    option.value = patternId;
-    option.textContent = patternName;
-    return option;
 }

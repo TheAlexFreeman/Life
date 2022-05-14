@@ -21,6 +21,7 @@ h2 {
     display: inline-block;
     font-family: 'Courier New', Courier, monospace;
     font-size: large;
+    text-align: end;
 }
 
 #grid-size input {
