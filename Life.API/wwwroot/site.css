@@ -23,7 +23,7 @@ h2 {
     font-size: large;
 }
 
-#grid-size input {
+#grid-size input[type=number] {
     width: 45px;
 }
 
@@ -57,10 +57,6 @@ select {
     height: 11px;
 }
 
-.row:first-child .cell {
-    border-top: 1px solid gray;
-}
-
 .cell {
     display: inline-block;
     height: 10px;
@@ -68,8 +64,4 @@ select {
     background-color: lightgray;
     border-bottom: 1px solid gray;
     border-right: 1px solid gray;
-}
-
-.cell:first-child {
-    border-left: 1px solid gray;
 }

@@ -20,9 +20,6 @@
         this.game = new Game(this.size);
         this.grid = new Grid(this.size, this.colors);
         this.resetCellEventHandlers();
-        document.getElementById('grid-library').onmouseout = () => {
-            this.menuSelect.blur();
-        }
     }
 
     get generationCount() {
@@ -173,7 +170,7 @@
                     const pattern = this.grid.translatePattern(points, x, y);
                     const newCells = pattern.filter(p => !this.game.hasCell(p));
                     if (newCells.length) {
-                        this.game.memory.push([null, ...newCells]);
+                        if (this.game.memory.length) { this.game.memory.push([null, ...newCells]); }
                         for (let cell of newCells) {
                             this.addCell(cell.x, cell.y)
                         }
@@ -196,7 +193,7 @@
             const memory = this.game.memory;
             if (this.isDirty) {
                 memory[memory.length - 1].push({ x, y });
-            } else {
+            } else if (memory.length) {
                 this.isDirty = true;
                 memory.push([null, { x, y }]);
             }

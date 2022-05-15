@@ -99,30 +99,15 @@
                     <input id="height" type="number" value="150" />
                 </label>
                 <button onclick="ACTIONS.updateSize()">Update Board Size</button>
+                <label for="borders">
+                    <input id="borders" type="checkbox" onchange="ACTIONS.updateBorders(event.target.checked)" />Borders
+                </label>
                 <button id="clear-board" onclick="ACTIONS.clearBoard()">Clear Board</button>
             </div>
 
             <br>
 
-            <span id="grid-library">
-                <label for="pattern-name">
-                    Pattern Name:
-                    <input id="pattern-name" type="text" />
-                </label>
-                <button onclick="savePattern()">Save Current Board</button>
-                <label for="pattern-menu">
-                    Saved Patterns:
-                    <select id="pattern-menu" onfocus="getPatterns()" onblur="loadPattern(event.target.value)">
-                        <option disabled selected value="">No patterns available</option>
-                    </select>
-                </label>
-            </span>
-
-            <label for="borders"> Borders:
-                <input id="borders" type="checkbox" onchange="ACTIONS.updateBorders(event.target.checked)" />
-            </label>
-
-            <span id="grid-colors">
+            <div id="grid-colors">
                 <label for="cell-color">
                     Cell Color: <input id="cell-color" type="color" value="#32cd32"
                         onchange="ACTIONS.updateCellColor(event.target.value)" />
@@ -131,7 +116,27 @@
                     Background Color: <input id="background-color" type="color" value="#d3d3d3"
                         onchange="ACTIONS.updateBackgroundColor(event.target.value)" />
                 </label>
-            </span>
+            </div>
+
+            <br />
+
+            <div id="grid-library">
+                <label for="pattern-name">
+                    Pattern Name:
+                    <input id="pattern-name" type="text" />
+                </label>
+                <button onclick="savePattern()">Save Current Board</button>
+                <label for="pattern-menu">
+                    Saved Patterns:
+                    <select id="pattern-menu" onfocus="getPatterns()" onchange="loadPattern(event.target.value)">
+                        <option disabled selected value="">No patterns available</option>
+                    </select>
+                </label>
+            </div>
+
+
+
+
         </div>
 
         <div id="game-buttons">
@@ -180,9 +185,11 @@
         getPatterns();
 
         window.onkeydown = function (event) {
-            if (event.keyCode === 39) { ACTIONS.tick(); }
-            if (event.keyCode === 37) { ACTIONS.back(); }
-            if (event.keyCode === 27) { ACTIONS.resetCellEventHandlers() }
+            if (event.target === document.body) {
+                if (event.keyCode === 39) { ACTIONS.tick(); }
+                if (event.keyCode === 37) { ACTIONS.back(); }
+                if (event.keyCode === 27) { ACTIONS.resetCellEventHandlers(); }
+            }
         };
 
         function getPatterns() {
