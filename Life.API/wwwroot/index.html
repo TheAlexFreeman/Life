@@ -40,7 +40,6 @@
         observing how
         it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.
     </p>
-
     <p>
         The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
         is in
@@ -50,7 +49,6 @@
         time,
         the following transitions occur:
     </p>
-
     <ul>
         <li>
             <strong>Any <em>live</em> cell with <em>fewer than two</em> live neighbours dies</strong>, as if by
@@ -70,7 +68,6 @@
         </li>
     </ul>
     <p>These rules, which compare the behavior of the automaton to real life, can be condensed into the following:</p>
-
     <ul>
         <li><strong>Any live cell with two or three live neighbours survives.</strong></li>
         <li><strong>Any dead cell with three live neighbours becomes a live cell.</strong></li>
@@ -85,7 +82,6 @@
         at which this happens is sometimes called a tick. Each generation is a pure function of the preceding one. The
         rules continue to be applied repeatedly to create further generations.
     </p>
-
     <hr />
     <div id="grid-container">
         <div id="grid-actions">
@@ -98,23 +94,22 @@
                     Board Height:
                     <input id="height" type="number" value="150" />
                 </label>
-                <button onclick="ACTIONS.updateSize()">Update Board Size</button>
+                <button onclick="updateSize()">Update Board Size</button>
                 <label for="borders">
-                    <input id="borders" type="checkbox" onchange="ACTIONS.updateBorders(event.target.checked)" />Borders
+                    <input id="borders" type="checkbox" onchange="updateBorders()" />Borders
                 </label>
                 <button id="clear-board" onclick="ACTIONS.clearBoard()">Clear Board</button>
             </div>
 
-            <br>
+            <br />
 
             <div id="grid-colors">
                 <label for="cell-color">
-                    Cell Color: <input id="cell-color" type="color" value="#32cd32"
-                        onchange="ACTIONS.updateCellColor(event.target.value)" />
+                    Cell Color: <input id="cell-color" type="color" value="#32cd32" onchange="updateCellColor()" />
                 </label>
                 <label for="background-color">
                     Background Color: <input id="background-color" type="color" value="#d3d3d3"
-                        onchange="ACTIONS.updateBackgroundColor(event.target.value)" />
+                        onchange="updateBackgroundColor()" />
                 </label>
             </div>
 
@@ -128,15 +123,11 @@
                 <button onclick="savePattern()">Save Current Board</button>
                 <label for="pattern-menu">
                     Saved Patterns:
-                    <select id="pattern-menu" onfocus="getPatterns()" onchange="loadPattern(event.target.value)">
+                    <select id="pattern-menu" onfocus="getPatterns()" onchange="loadPattern()">
                         <option disabled selected value="">No patterns available</option>
                     </select>
                 </label>
             </div>
-
-
-
-
         </div>
 
         <div id="game-buttons">
@@ -177,10 +168,12 @@
     <script src="game.js" asp-append-version="true"></script>
     <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
+    <script src="input.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
-        const ACTIONS = new SiteActions();
+        const INPUT = new InputHandler();
+        const ACTIONS = new SiteActions(INPUT.size, INPUT.colors);
 
         getPatterns();
 
@@ -192,21 +185,37 @@
             }
         };
 
+        function updateSize() {
+            ACTIONS.updateSize(INPUT.size);
+        }
+
+        function updateBorders() {
+            ACTIONS.updateBorders(INPUT.borders);
+        }
+
+        function updateCellColor() {
+            ACTIONS.updateCellColor(INPUT.cellColor);
+        }
+
+        function updateBackgroundColor() {
+            ACTIONS.updateBackgroundColor(INPUT.backgroundColor);
+        }
+
         function getPatterns() {
             apiGetAllPatterns()
-                .then(patterns => ACTIONS.setupMenu(patterns));
+                .then(patterns => INPUT.setupMenu(patterns));
         }
 
         function savePattern() {
-            const { name, creator, points } = ACTIONS.validatePattern();
+            const { name, creator, points } = INPUT.validatePattern();
             apiSavePattern(name, creator, points)
-                .then(pattern => ACTIONS.addMenuOption(pattern))
+                .then(pattern => INPUT.addMenuOption(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
         }
 
-        function loadPattern(id) {
-            if (parseInt(id)) {
-                apiLoadPattern(id)
+        function loadPattern() {
+            if (INPUT.patternId) {
+                apiLoadPattern(INPUT.patternId)
                     .then(pattern => ACTIONS.setPreviewPattern(pattern))
                     .catch(error => console.error(`Unable to load pattern ${id}. `, error));
             } else {

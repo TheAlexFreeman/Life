@@ -1,24 +1,13 @@
 ﻿class SiteActions {
-    menuSelect = document.getElementById('pattern-menu');
-    sizeInputs = {
-        width: document.getElementById('width'),
-        height: document.getElementById('height')
-    }
-    colorInputs = {
-        on: document.getElementById('cell-color'),
-        off: document.getElementById('background-color')
-    }
-    borderCheckbox = document.getElementById('borders');
-    patternNameInput = document.getElementById('pattern-name');
     generationCounter = document.getElementById('gen-counter');
     populationCounter = document.getElementById('pop-counter');
     game;
     grid;
     isDirty = false;
 
-    constructor() {
-        this.game = new Game(this.size);
-        this.grid = new Grid(this.size, this.colors);
+    constructor(size, colors) {
+        this.game = new Game(size);
+        this.grid = new Grid(size, colors);
         this.resetCellEventHandlers();
     }
 
@@ -36,44 +25,12 @@
         this.populationCounter.textContent = value;
     }
 
-    get size() {
-        const { height, width } = this.sizeInputs;
-        return {
-            x: parseInt(height.value),
-            y: parseInt(width.value)
-        }
-    }
-
-    get colors() {
-        const { on, off } = this.colorInputs;
-        return {
-            on: on.value,
-            off: off.value
-        }
-    }
-
-    get patternName() {
-        return this.patternNameInput.value;
-    }
-
-    get patternId() {
-        return this.menuSelect.value;
-    }
-
     get isEmpty() {
         return !this.game.hasCells;
     }
 
     get currentPattern() {
         return this.game.normalizedCells;
-    }
-
-    validatePattern() {
-        if (this.isEmpty) return window.alert("Pattern cannot be empty.");
-        const name = this.patternName;
-        const creator = this.creatorName || "Anonymouse";
-        if (!name) return window.alert("Pattern must have a name.");
-        return { name, creator, points: this.currentPattern };
     }
 
     clearBoard() {
@@ -83,9 +40,9 @@
         this.populationCount = 0;
     }
 
-    updateSize() {
-        this.game.setSize(this.size);
-        this.grid.setSize(this.size);
+    updateSize(size) {
+        this.game.setSize(size);
+        this.grid.setSize(size);
         this.populationCount = 0;
         for (let { x, y } of this.game.liveCells) {
             this.grid.addCell(x, y);
@@ -155,16 +112,16 @@
             const { points } = pattern;
 
             this.grid.onCellHover(
-                (x, y) => () => {
+                (x, y) => {
                     this.grid.previewPattern(points, x, y, true)
                 },
-                (x, y) => () => {
+                (x, y) => {
                     this.grid.previewPattern(points, x, y, false)
                 }
             );
 
             this.grid.onCellClick(
-                (x, y) => () => {
+                (x, y) => {
                     this.isDirty = true;
                     this.grid.previewPattern(points, x, y, false);
                     const pattern = this.grid.translatePattern(points, x, y);
@@ -200,22 +157,4 @@
         });
     }
 
-    addMenuOption(pattern) {
-        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
-    }
-
-    setupMenu(patterns = []) {
-        this.menuSelect.innerHTML = '';
-        this.menuSelect.appendChild(menuOption(null, '--Select a pattern--'));
-        for (let pattern of patterns) {
-            this.addMenuOption(pattern);
-        }
-    }
-}
-
-function menuOption(patternId, patternName) {
-    const option = document.createElement('option');
-    option.value = patternId;
-    option.textContent = patternName;
-    return option;
 }

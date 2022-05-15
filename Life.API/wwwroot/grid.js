@@ -219,11 +219,11 @@ class Grid {
                 let cell = this._grid[x][y].element
                 cell.onmouseover = () => {
                     cell.style.opacity = 0.5;
-                    mouseOver(x, y)();
+                    mouseOver(x, y);
                 }
                 cell.onmouseout = () => {
                     cell.style.opacity = 1.0;
-                    mouseOut(x, y)();
+                    mouseOut(x, y);
                 }
             }
         }
