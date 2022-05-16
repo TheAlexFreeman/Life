@@ -8,23 +8,29 @@ class Grid {
     colors = { on: 'limegreen', off: 'lightgray' };
     root;
     size;
+    game;
     hasBorders = false;
     _grid;
 
-    constructor(size, colors, borders = false, cells = []) {
+    // TODO: Dependency Injection in constructor (GAME, INPUT)
+    constructor(size, colors, borders = false) {
+        this.game = new Game(size, borders);
         this.root = document.getElementById('grid');
         this.colors = colors;
         this.setSize(size);
         this.setBorders(borders);
+    }
 
-        cells.forEach(({ x, y }) => {
-            if (x < size.x && y < size.y) {
-                this.toggleCell(x, y)
+    mapXY(func = (x, y) => { }) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                func(x, y);
             }
-        });
+        }
     }
 
     setBorders(on = false) {
+        this.game.setBorders(on);
         this.hasBorders = on;
         const value = on ? "1px solid black" : "1px dashed gray";
         this.setBordersTopBottom(value);
@@ -35,58 +41,55 @@ class Grid {
         const topRow = this._grid[0];
         const bottomRow = this._grid[this.size.x - 1];
         for (let y = 0; y < this.size.y; y++) {
-            topRow[y].element.style.borderTop = value;
-            bottomRow[y].element.style.borderBottom = value;
+            topRow[y].style.borderTop = value;
+            bottomRow[y].style.borderBottom = value;
         }
     }
 
     setBordersLeftRight(value) {
         const y = this.size.y - 1;
         for (let row of this._grid) {
-            row[0].element.style.borderLeft = value;
-            row[y].element.style.borderRight = value;
+            row[0].style.borderLeft = value;
+            row[y].style.borderRight = value;
         }
     }
 
     setColors(colors) {
         this.colors = colors;
-        for (let row of this._grid) {
-            for (let cell of row) {
-                this.normalizeCellColor(cell);
-            }
-        }
+        this.mapXY((x, y) => this.correctColor(x, y));
+    }
+
+    correctColor(x, y) {
+        const color = this.game.hasCell({ x, y }) ? colors.on : colors.off;
+        this.colorSquare(x, y, color);
+    }
+
+    colorSquare(x, y, color) {
+        this._grid[x][y].style.backgroundColor = color;
     }
 
     setCellColor(color) {
         this.colors.on = color;
-        for (let row of this._grid) {
-            for (let cell of row) {
-                if (cell.isAlive) {
-                    cell.element.style.backgroundColor = color;
-                }
-            }
+        for (let { x, y } of this.game.liveCells) {
+            this.colorSquare(x, y, color);
         }
     }
 
     setBackgroundColor(color) {
         this.colors.off = color;
-        for (let row of this._grid) {
-            for (let cell of row) {
-                if (!cell.isAlive) {
-                    cell.element.style.backgroundColor = color;
-                }
+        this.mapXY((x, y) => {
+            if (!this.game.hasCell({ x, y })) {
+                this.colorSquare(x, y, color);
             }
-        }
+        });
     }
 
     clear() {
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++)
-                this.removeCell(x, y);
-        }
+        this.mapXY((x, y) => this.removeCell(x, y));
     }
 
     setSize(size) {
+        this.game.setSize(size);
         this.size = size;
         this._grid = [];
         this.root.innerHTML = '';
@@ -105,7 +108,7 @@ class Grid {
         for (let y = 0; y < size; y++) {
             const cell = create('span', 'cell');
             row.appendChild(cell);
-            this._grid[x].push({ element: cell, isAlive: false });
+            this._grid[x].push(cell);
         }
         return row;
     }
@@ -121,9 +124,8 @@ class Grid {
     }
 
     addCell(x, y) {
-        const cell = this._grid[x][y];
-        cell.isAlive = true;
-        cell.element.style.backgroundColor = this.colors.on;
+        this.game.addCell({ x, y });
+        this.colorSquare(x, y, this.colors.on);
     }
 
     removeCells(cells) {
@@ -133,15 +135,13 @@ class Grid {
     }
 
     removeCell(x, y) {
-        const cell = this._grid[x][y];
-        cell.isAlive = false;
-        cell.element.style.backgroundColor = this.colors.off;
+        this.game.removeCell({ x, y });
+        this.colorSquare(x, y, this.colors.off);
     }
 
     toggleCell(x, y) {
-        const cell = this._grid[x][y];
-        cell.isAlive = !cell.isAlive;
-        this.normalizeCellColor(cell);
+        this.game.toggleCell({ x, y });
+        this.correctColor(x, y);
     }
 
     normalizeCellColor(cell) {
@@ -194,47 +194,40 @@ class Grid {
     previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
         if (on) {
-            cell.element.style.opacity = 0.75;
-            cell.element.style.backgroundColor = this.colors.on;
+            this.colorSquareWithOpacity(x, y, this.colors.on, 0.75);
         } else {
-            cell.element.style.opacity = 1.0;
+            cell.style.opacity = 1.0;
             this.normalizeCellColor(cell);
         }
     }
 
-    onCellClick(clickHandler) {
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++) {
-                this._grid[x][y].element.onclick = clickHandler(x, y);
-            }
-        }
+    onCellClick(clickHandler = (x, y) => () => { }) {
+        this.mapXY((x, y) => {
+            this._grid[x][y].onclick = clickHandler(x, y)
+        });
     }
 
     resetCellHover() {
-        for (let row of this._grid) {
-            for (let cell of row) {
-                let { element } = cell;
-                element.onmouseover = () => { element.style.opacity = 0.5; };
-                element.onmouseout = () => { element.style.opacity = 1.0; };
-                element.style.opacity = 1.0;
-                this.normalizeCellColor(cell)
-            }
-        }
+        this.mapXY((x, y) => {
+            this.correctColor(x, y);
+            const cell = this._grid[x][y];
+            cell.onmouseover = () => { cell.style.opacity = 0.5; };
+            cell.onmouseout = () => { cell.style.opacity = 1.0; };
+            cell.style.opacity = 1.0;
+        });
     }
 
-    onCellHover(mouseOver, mouseOut) {
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++) {
-                let cell = this._grid[x][y].element
-                cell.onmouseover = () => {
-                    cell.style.opacity = 0.5;
-                    mouseOver(x, y);
-                }
-                cell.onmouseout = () => {
-                    cell.style.opacity = 1.0;
-                    mouseOut(x, y);
-                }
+    onCellHover(mouseOver = (x, y) => { }, mouseOut = (x, y) => { }) {
+        this.mapXY((x, y) => {
+            const cell = this._grid[x][y];
+            cell.onmouseover = () => {
+                cell.style.opacity = 0.5;
+                mouseOver(x, y);
             }
-        }
+            cell.onmouseout = () => {
+                cell.style.opacity = 1.0;
+                mouseOut(x, y);
+            }
+        });
     }
 }
