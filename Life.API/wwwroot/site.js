@@ -45,10 +45,10 @@
         this.grid.setSize(size);
         this.populationCount = 0;
         for (let { x, y } of this.game.liveCells) {
-            this.grid.addCell(x, y);
-            this.populationCount += 1;
+            this.grid.addCell(x, y); // Resize grid w/o deleting info 
+            this.populationCount += 1; // How to deal w/ population counter? MEMORY? INPUT?
         }
-        this.resetCellEventHandlers();
+        this.resetCellEventHandlers(); // This should be manageable w/in GRID
     }
 
     updateBorders(borders = false) {
@@ -122,18 +122,19 @@
 
             this.grid.onCellClick(
                 (x, y) => {
-                    this.isDirty = true;
-                    this.grid.previewPattern(points, x, y, false);
+                    this.isDirty = true; // MEMORY
+                    this.grid.previewPattern(points, x, y, false); // GRID.addPattern -- Should it return new cells?
+
                     const pattern = this.grid.translatePattern(points, x, y);
                     const newCells = pattern.filter(p => !this.game.hasCell(p));
-                    if (newCells.length) {
+                    if (newCells.length) { // ALL this belongs in memory mgmt class
                         if (this.game.memory.length) { this.game.memory.push([null, ...newCells]); }
                         for (let cell of newCells) {
-                            this.addCell(cell.x, cell.y)
+                            this.addCell(cell.x, cell.y) // How to add new cells to game?
                         }
                     }
-                    this.resetCellEventHandlers();
-                    this.menuSelect.value = null;
+                    this.resetCellEventHandlers(); // GRID.addPattern -- de-curry lambda function to straight (x, y) => {}
+                    this.menuSelect.value = null; // INPUT
                 }
             );
         }
@@ -144,7 +145,7 @@
         this.grid.resetCellHover();
     }
 
-    resetCellClickHandler() {
+    resetCellClickHandler() { // Should this belong to GRID? INPUT? How can GAME/MEMORY get updated?
         this.grid.onCellClick((x, y) => () => {
             this.toggleCell(x, y);
             const memory = this.game.memory;

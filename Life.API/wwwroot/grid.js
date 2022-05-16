@@ -25,34 +25,26 @@ class Grid {
     }
 
     setBorders(on = false) {
+        this.hasBorders = on;
         const value = on ? "1px solid black" : "1px dashed gray";
-        this.setBorderTop(value);
-        this.setBorderBottom(value);
-        this.setBorderLeft(value);
-        this.setBorderRight(value);
+        this.setBordersTopBottom(value);
+        this.setBordersLeftRight(value);
     }
 
-    setBorderTop(value) {
-        for (let cell of this._grid[0]) {
-            cell.element.style.borderTop = value;
+    setBordersTopBottom(value) {
+        const topRow = this._grid[0];
+        const bottomRow = this._grid[this.size.x - 1];
+        for (let y = 0; y < this.size.y; y++) {
+            topRow[y].element.style.borderTop = value;
+            bottomRow[y].element.style.borderBottom = value;
         }
     }
 
-    setBorderBottom(value) {
-        for (let cell of this._grid[this.size.x - 1]) {
-            cell.element.style.borderBottom = value;
-        }
-    }
-
-    setBorderLeft(value) {
+    setBordersLeftRight(value) {
+        const y = this.size.y - 1;
         for (let row of this._grid) {
             row[0].element.style.borderLeft = value;
-        }
-    }
-
-    setBorderRight(value) {
-        for (let row of this._grid) {
-            row[this.size.y - 1].element.style.borderRight = value;
+            row[y].element.style.borderRight = value;
         }
     }
 
@@ -153,9 +145,27 @@ class Grid {
     }
 
     normalizeCellColor(cell) {
-        cell.element.style.opacity = 1.0;
         cell.element.style.backgroundColor =
             cell.isAlive ? this.colors.on : this.colors.off;
+    }
+
+    setPreviewPattern(points) {
+        this.onCellHover(
+            (x, y) => {
+                this.previewPattern(points, x, y, true);
+            },
+            (x, y) => {
+                this.previewPattern(points, x, y, false);
+            }
+        );
+        // How to update rest of program on cell click?
+        this.onCellClick(
+            (x, y) => {
+                this.previewPattern(points, x, y, false);
+                this.addPattern(points, x, y);
+                this.resetCellEventHandlers();
+            }
+        );
     }
 
     previewPattern(points, dx = 0, dy = 0, on = true) {
@@ -175,7 +185,6 @@ class Grid {
     }
 
     ptAdd(p1, p2) {
-        // TODO: Toggle borders on/off
         return {
             x: (p1.x + p2.x) % this.size.x,
             y: (p1.y + p2.y) % this.size.y,
