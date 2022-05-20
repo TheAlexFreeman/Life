@@ -44,7 +44,7 @@ class Game {
 
     setBorders(on = false) {
         this.neighbors = on ?
-            (point) => neighbors(point).filter(p => this.inBounds(p)) :
+            (point) => neighbors(point).filter(p => this.includes(p)) :
             (point) => neighbors(point).map(p => this.mod(p));
     }
 
@@ -54,16 +54,12 @@ class Game {
         this.memory = [];
     }
 
-    tick() {
-        const changes = this._relevantCells.list.filter(p => this.needsUpdate(p));
-        if (changes.length) {
-            this.memory.push(changes);
-        }
-        return changes;
+    get cellsToChange() {
+        return this._relevantCells.filter(p => this.needsUpdate(p));
     }
 
     needsUpdate(point) {
-        let liveNeighborCount = this.countLiveNeighbors(point);
+        const liveNeighborCount = this.countLiveNeighbors(point);
         if (liveNeighborCount < 2) {
             this._relevantCells.remove(point);
         }
@@ -77,9 +73,16 @@ class Game {
 
     neighbors = (point) => neighbors(point).map(p => this.mod(p));
 
-    inBounds(point) {
-        return point.x >= 0 && point.y >= 0 &&
-            point.x < this.size.x && point.y < this.size.y;
+    includes(point) {
+        return this.includesX(point) && this.includesY(point);
+    }
+
+    includesX(point) {
+        return point.x >= 0 && point.x < this.size.x;
+    }
+
+    includesY(point) {
+        return point.y >= 0 && point.y < this.size.y;
     }
 
     mod(point) {
@@ -88,18 +91,6 @@ class Game {
             x: (x + point.x) % x,
             y: (y + point.y) % y
         }
-    }
-
-    back() {
-        if (this.memory.length) {
-            const changes = this.memory.pop();
-            if (changes[0]) {
-                return { changes, dirty: false };
-            }
-            changes.shift();
-            return { changes, dirty: true };
-        }
-        return { changes: [], dirty: true };
     }
 
     toggleCell(p) {

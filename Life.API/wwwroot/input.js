@@ -11,7 +11,24 @@ class InputHandler {
     borderCheckbox = document.getElementById('borders');
     patternNameInput = document.getElementById('pattern-name');
 
+    generationCounter = document.getElementById('gen-counter');
+    populationCounter = document.getElementById('pop-counter');
+
     constructor() { }
+
+    get generationCount() {
+        return parseInt(this.generationCounter.textContent);
+    }
+    set generationCount(value) {
+        this.generationCounter.textContent = value;
+    }
+
+    get populationCount() {
+        return parseInt(this.populationCounter.textContent);
+    }
+    set populationCount(value) {
+        this.populationCounter.textContent = value;
+    }
 
     get borders() {
         return this.borderCheckbox.checked;
@@ -52,17 +69,12 @@ class InputHandler {
         return this.menuSelect.value;
     }
 
-    validatePattern() {
-        if (this.isEmpty) return window.alert("Pattern cannot be empty.");
+    validatePattern(grid) {
+        if (grid.isEmpty) return window.alert("Pattern cannot be empty.");
         const name = this.patternName;
         const creator = this.creatorName || "Anonymouse";
         if (!name) return window.alert("Pattern must have a name.");
-        return { name, creator, points: this.currentPattern };
-    }
-
-
-    addMenuOption(pattern) {
-        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
+        return { name, creator, points: grid.normalizedPattern };
     }
 
     setupMenu(patterns = []) {
@@ -71,6 +83,10 @@ class InputHandler {
         for (let pattern of patterns) {
             this.addMenuOption(pattern);
         }
+    }
+
+    addMenuOption(pattern) {
+        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
     }
 }
 

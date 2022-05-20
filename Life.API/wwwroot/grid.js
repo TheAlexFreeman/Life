@@ -1,27 +1,53 @@
-function create(tagName = 'div', className = '') {
-    const el = document.createElement(tagName);
-    el.className = className;
-    return el;
-}
-
 class Grid {
     colors = { on: 'limegreen', off: 'lightgray' };
     root;
     size;
     game;
     hasBorders = false;
-    _grid;
+    _grid = [];
 
     // TODO: Dependency Injection in constructor (GAME, INPUT)
-    constructor(size, colors, borders = false) {
-        this.game = new Game(size, borders);
-        this.root = document.getElementById('grid');
+    constructor(root, size, colors) {
+        this.root = root;
+        this.game = new Game(size);
+        this.size = size;
         this.colors = colors;
-        this.setSize(size);
-        this.setBorders(borders);
     }
 
-    mapXY(func = (x, y) => { }) {
+    get population() {
+        return this.game.population;
+    }
+
+    get pattern() {
+        return this.game.liveCells;
+    }
+
+    get normalizedPattern() {
+        return this.game.normalizedCells;
+    }
+
+    appendRow(rowElement) {
+        this.root.appendChild(rowElement);
+        const row = [];
+        for (let cellElement of rowElement.children) {
+            row.push(cellElement);
+        }
+        this._grid.push(row);
+    }
+
+    hasCell(x = 0, y = 0) {
+        return this.game.hasCell({ x, y });
+    }
+
+    tick() {
+        const changes = this.game.cellsToChange;
+        for (let { x, y } of changes) {
+            this.toggleCell(x, y);
+        }
+        return changes;
+    }
+
+    _mapXY(func = (x, y) => { }) {
         for (let x = 0; x < this.size.x; x++) {
             for (let y = 0; y < this.size.y; y++) {
                 func(x, y);
@@ -56,12 +82,12 @@ class Grid {
 
     setColors(colors) {
         this.colors = colors;
-        this.mapXY((x, y) => this.correctColor(x, y));
+        this._mapXY((x, y) => this.correctColor(x, y));
     }
 
     correctColor(x, y) {
-        const color = this.game.hasCell({ x, y }) ? colors.on : colors.off;
-        this.colorSquare(x, y, color);
+        const { on, off } = this.colors;
+        this.colorSquare(x, y, this.hasCell(x, y) ? on : off);
     }
 
     colorSquare(x, y, color) {
@@ -77,44 +103,37 @@ class Grid {
 
     setBackgroundColor(color) {
         this.colors.off = color;
-        this.mapXY((x, y) => {
-            if (!this.game.hasCell({ x, y })) {
+        this._mapXY((x, y) => {
+            if (!this.hasCell(x, y)) {
                 this.colorSquare(x, y, color);
             }
         });
     }
 
     clear() {
-        this.mapXY((x, y) => this.removeCell(x, y));
+        this._mapXY((x, y) => this.removeCell(x, y));
+    }
+
+    deleteContent() {
+        this._grid = [];
+        this.root.innerHTML = '';
     }
 
     setSize(size) {
         this.game.setSize(size);
         this.size = size;
-        this._grid = [];
-        this.root.innerHTML = '';
-        this.fill(size);
     }
 
-    fill(size) {
-        for (let x = 0; x < size.x; x++) {
-            this._grid.push([]);
-            this.root.appendChild(this.createRow(x, size.y));
+    addPattern(pattern, dx = 0, dy = 0) {
+        this.previewPattern(pattern, dx, dy, false);
+        const result = [];
+        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
+            if (!this.hasCell(x, y)) {
+                result.push({ x, y });
+                this.addCell(x, y);
+            }
         }
-    }
-
-    createRow(x = 0, size = 10) {
-        const row = create('div', 'row');
-        for (let y = 0; y < size; y++) {
-            const cell = create('span', 'cell');
-            row.appendChild(cell);
-            this._grid[x].push(cell);
-        }
-        return row;
-    }
-
-    addPattern(points, dx = 0, dy = 0) {
-        this.addCells(this.translatePattern(points, dx, dy));
+        return result;
     }
 
     addCells(cells) {
@@ -144,90 +163,65 @@ class Grid {
         this.correctColor(x, y);
     }
 
-    normalizeCellColor(cell) {
-        cell.element.style.backgroundColor =
-            cell.isAlive ? this.colors.on : this.colors.off;
+    translatePattern(pattern, dx = 0, dy = 0) {
+        const points = pattern.map(p => ({
+            x: p.x + dx,
+            y: p.y + dy
+        })
+        );
+        return this.hasBorders ? points.filter(p => this.includes(p)) : points.map(p => this.mod(p));
     }
 
-    setPreviewPattern(points) {
-        this.onCellHover(
-            (x, y) => {
-                this.previewPattern(points, x, y, true);
-            },
-            (x, y) => {
-                this.previewPattern(points, x, y, false);
-            }
-        );
-        // How to update rest of program on cell click?
-        this.onCellClick(
-            (x, y) => {
-                this.previewPattern(points, x, y, false);
-                this.addPattern(points, x, y);
-                this.resetCellEventHandlers();
-            }
-        );
+    includes(point) {
+        return this.includesX(point) && this.includesY(point);
     }
 
-    previewPattern(points, dx = 0, dy = 0, on = true) {
-        for (let p of this.translatePattern(points, dx, dy)) {
-            this.previewCell(p.x, p.y, on);
+    includesX(point) {
+        return point.x >= 0 && point.x < this.size.x;
+    }
+
+    includesY(point) {
+        return point.y >= 0 && point.y < this.size.y;
+    }
+
+    mod(point) {
+        return {
+            x: point.x % this.size.x,
+            y: point.y % this.size.y
         }
     }
 
-    translatePattern(points, dx = 0, dy = 0) {
-        const pattern = points.map(p => this.ptAdd(p, { x: dx, y: dy }));
-        return this.hasBorders ? pattern.filter(p => this.inBounds(p)) : pattern;
-    }
-
-    inBounds(point) {
-        return point.x >= 0 && point.y >= 0 &&
-            point.x < this.size.x && point.y < this.size.y;
-    }
-
-    ptAdd(p1, p2) {
-        return {
-            x: (p1.x + p2.x) % this.size.x,
-            y: (p1.y + p2.y) % this.size.y,
+    previewPattern(pattern, dx = 0, dy = 0, on = true) {
+        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
+            this.previewCell(x, y, on);
         }
     }
 
     previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
-        if (on) {
-            this.colorSquareWithOpacity(x, y, this.colors.on, 0.75);
-        } else {
-            cell.style.opacity = 1.0;
-            this.normalizeCellColor(cell);
-        }
+        cell.style.opacity = on ? 0.8 : 1.0;
+        cell.style.backgroundColor = on ? this.colors.on : this.colors.off;
     }
 
     onCellClick(clickHandler = (x, y) => () => { }) {
-        this.mapXY((x, y) => {
+        this._mapXY((x, y) => {
             this._grid[x][y].onclick = clickHandler(x, y)
         });
     }
 
-    resetCellHover() {
-        this.mapXY((x, y) => {
-            this.correctColor(x, y);
+    onCellHover(mouseOver = (x, y) => () => { }, mouseOut = (x, y) => () => { }) {
+        this._mapXY((x, y) => {
             const cell = this._grid[x][y];
-            cell.onmouseover = () => { cell.style.opacity = 0.5; };
-            cell.onmouseout = () => { cell.style.opacity = 1.0; };
-            cell.style.opacity = 1.0;
+            cell.onmouseover = mouseOver(x, y);
+            cell.onmouseout = mouseOut(x, y);
         });
     }
 
-    onCellHover(mouseOver = (x, y) => { }, mouseOut = (x, y) => { }) {
-        this.mapXY((x, y) => {
+    resetHover() {
+        this._mapXY((x, y) => {
             const cell = this._grid[x][y];
-            cell.onmouseover = () => {
-                cell.style.opacity = 0.5;
-                mouseOver(x, y);
-            }
-            cell.onmouseout = () => {
-                cell.style.opacity = 1.0;
-                mouseOut(x, y);
-            }
+            cell.onmouseover = () => { cell.style.opacity = 0.5; };
+            cell.onmouseout = () => { cell.style.opacity = 1.0; };
         });
     }
 }

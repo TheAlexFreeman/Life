@@ -21,7 +21,7 @@ class Points {
     }
 
     get size() {
-        const result = 0;
+        let result = 0;
         for (let [_, ys] of this._map) {
             result += ys.size;
         }
@@ -93,6 +93,28 @@ class Points {
         for (let [x, ys] of this._map) {
             for (let y of ys) {
                 result.push(point(x - min.x, y - min.y));
+            }
+        }
+        return result;
+    }
+
+    map(func = p => p) {
+        const result = [];
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                result.push(func({ x, y }));
+            }
+        }
+        return result;
+    }
+
+    filter(pred = _ => true) {
+        const result = [];
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                if (pred({ x, y })) {
+                    result.push({ x, y });
+                }
             }
         }
         return result;

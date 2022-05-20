@@ -5,24 +5,6 @@
     <meta charset="UTF-8">
     <title>Game of Life</title>
     <link rel="stylesheet" href="site.css" />
-
-    <!--<link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
-    <link rel="manifest" href="/favicon/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="/favicon/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">-->
 </head>
 
 <body>
@@ -41,7 +23,7 @@
         it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.
     </p>
     <p>
-        The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
+        The universe of the Game of Life is an infinite, two-dimensional orthogonal GRID of square cells, each of which
         is in
         one of two possible states, live or dead (or populated and unpopulated, respectively). Every cell interacts with
         its
@@ -83,9 +65,9 @@
         rules continue to be applied repeatedly to create further generations.
     </p>
     <hr />
-    <div id="grid-container">
-        <div id="grid-actions">
-            <div id="grid-size">
+    <div id="GRID-container">
+        <div id="GRID-actions">
+            <div id="GRID-size">
                 <label for="width">
                     Board Width:
                     <input id="width" type="number" value="150" />
@@ -94,36 +76,37 @@
                     Board Height:
                     <input id="height" type="number" value="150" />
                 </label>
-                <button onclick="updateSize()">Update Board Size</button>
+                <button onclick="updateSizeAction()">Update Board Size</button>
                 <label for="borders">
-                    <input id="borders" type="checkbox" onchange="updateBorders()" />Borders
+                    <input id="borders" type="checkbox" onchange="updateBordersAction()" />Borders
                 </label>
-                <button id="clear-board" onclick="ACTIONS.clearBoard()">Clear Board</button>
+                <button id="clear-board" onclick="clearBoardAction()">Clear Board</button>
             </div>
 
             <br />
 
-            <div id="grid-colors">
+            <div id="GRID-colors">
                 <label for="cell-color">
-                    Cell Color: <input id="cell-color" type="color" value="#32cd32" onchange="updateCellColor()" />
+                    Cell Color: <input id="cell-color" type="color" value="#32cd32"
+                        onchange="updateCellColorAction()" />
                 </label>
                 <label for="background-color">
                     Background Color: <input id="background-color" type="color" value="#d3d3d3"
-                        onchange="updateBackgroundColor()" />
+                        onchange="updateBackgroundColorAction()" />
                 </label>
             </div>
 
             <br />
 
-            <div id="grid-library">
+            <div id="GRID-library">
                 <label for="pattern-name">
                     Pattern Name:
                     <input id="pattern-name" type="text" />
                 </label>
-                <button onclick="savePattern()">Save Current Board</button>
+                <button onclick="savePatternAction()">Save Current Board</button>
                 <label for="pattern-menu">
                     Saved Patterns:
-                    <select id="pattern-menu" onfocus="getPatterns()" onchange="loadPattern()">
+                    <select id="pattern-menu" onfocus="getPatternsAction()" onchange="loadPatternAction()">
                         <option disabled selected value="">No patterns available</option>
                     </select>
                 </label>
@@ -131,8 +114,8 @@
         </div>
 
         <div id="game-buttons">
-            <button onclick="ACTIONS.back()">&lt;&lt;&lt;</button>
-            <button onclick="ACTIONS.tick()">&gt;&gt;&gt;</button>
+            <button onclick="backAction()">&lt;&lt;&lt;</button>
+            <button onclick="tickAction()">&gt;&gt;&gt;</button>
         </div>
 
         <div id="game-stats">
@@ -141,7 +124,7 @@
             Population: <span id="pop-counter">0</span>
         </div>
 
-        <div id="grid">
+        <div id="GRID">
         </div>
     </div>
 
@@ -166,62 +149,173 @@
 
     <script src="points.js" asp-append-version="true"></script>
     <script src="game.js" asp-append-version="true"></script>
-    <script src="grid.js" asp-append-version="true"></script>
+    <script src="GRID.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
     <script src="input.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
-        const ACTIONS = new SiteActions(INPUT.size, INPUT.colors);
+        const GRID = new Grid(document.getElementById('GRID'), INPUT.size, INPUT.colors);
+        const MEMORY = [];
+        let isDirty = false;
 
-        getPatterns();
+        createGrid();
+        getPatternsAction();
 
         window.onkeydown = function (event) {
             if (event.target === document.body) {
-                if (event.keyCode === 39) { ACTIONS.tick(); }
-                if (event.keyCode === 37) { ACTIONS.back(); }
-                if (event.keyCode === 27) { ACTIONS.resetCellEventHandlers(); }
+                switch (event.keyCode) {
+                    case 39: tickAction(); break;
+                    case 37: backAction(); break;
+                    case 27: resetCellEventHandlers(); break;
+                }
             }
         };
 
-        function updateSize() {
-            ACTIONS.updateSize(INPUT.size);
+        // User Actions
+
+        function tickAction() {
+            const changes = GRID.tick();
+            MEMORY.push(changes);
+            INPUT.generationCount += 1;
+            INPUT.populationCount = GRID.population;
         }
 
-        function updateBorders() {
-            ACTIONS.updateBorders(INPUT.borders);
+        function backAction() {
+            const changes = MEMORY.pop();
+            if (changes[0] === null) {
+                changes.shift();
+            } else {
+                INPUT.generationCount -= 1
+            }
+
+            for (let { x, y } of changes) {
+                GRID.toggleCell(x, y);
+            }
+            INPUT.populationCount = GRID.population;
         }
 
-        function updateCellColor() {
-            ACTIONS.updateCellColor(INPUT.cellColor);
+        function updateSizeAction() {
+            GRID.setSize(INPUT.size);
+            createGRID(GRID.pattern);
         }
 
-        function updateBackgroundColor() {
-            ACTIONS.updateBackgroundColor(INPUT.backgroundColor);
+        function updateBordersAction() {
+            GRID.setBorders(INPUT.borders);
         }
 
-        function getPatterns() {
+        function updateCellColorAction() {
+            GRID.setCellColor(INPUT.cellColor);
+        }
+
+        function updateBackgroundColorAction() {
+            GRID.setBackgroundColor(INPUT.backgroundColor);
+        }
+
+        function getPatternsAction() {
             apiGetAllPatterns()
                 .then(patterns => INPUT.setupMenu(patterns));
         }
 
-        function savePattern() {
-            const { name, creator, points } = INPUT.validatePattern();
+        function savePatternAction() {
+            const { name, creator, points } = INPUT.validatePattern(GRID);
             apiSavePattern(name, creator, points)
                 .then(pattern => INPUT.addMenuOption(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
         }
 
-        function loadPattern() {
+        function loadPatternAction() {
             if (INPUT.patternId) {
                 apiLoadPattern(INPUT.patternId)
-                    .then(pattern => ACTIONS.setPreviewPattern(pattern))
+                    .then(pattern => setPreviewPattern(pattern))
                     .catch(error => console.error(`Unable to load pattern ${id}. `, error));
             } else {
-                ACTIONS.resetCellEventHandlers();
+                resetCellEventHandlers();
             }
         }
+
+        // Creation of DOM elements
+
+        function create(tagName = 'div', className = '') {
+            const el = document.createElement(tagName);
+            el.className = className;
+            return el;
+        }
+
+        function createGrid(cells = []) {
+            GRID.deleteContent();
+            for (let x = 0; x < INPUT.size.x; x++) {
+                const row = createRow(x, INPUT.size.y, cells);
+                GRID.appendRow(row);
+            }
+            GRID.setBorders(INPUT.borders);
+        }
+
+        function createRow(x = 0, size = 10, cells = []) {
+            const row = create('div', 'row');
+            for (let y = 0; y < size; y++) {
+                const cell = createCell(x, y, cells.includes({ x, y }));
+                row.appendChild(cell);
+            }
+            return row;
+        }
+
+        function createCell(x = 0, y = 0, isAlive = false) {
+            const cell = create('span', 'cell');
+            cell.style.backgroundColor =
+                isAlive ? INPUT.cellColor : INPUT.backgroundColor;
+            cell.onclick = () => {
+                GRID.toggleCell(x, y);
+                INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
+                addEdit([{ x, y }]);
+            }
+            cell.onmouseover = () => { cell.style.opacity = 0.5; }
+            cell.onmouseout = () => { cell.style.opacity = 1.0; }
+            return cell;
+        }
+
+        // Click/hover handler functions
+
+        function addEdit(points) {
+            if (MEMORY.length) {
+                if (!isDirty) {
+                    MEMORY.push([null]);
+                    isDirty = true;
+                }
+                MEMORY[MEMORY.length - 1].push(...points);
+            }
+        }
+
+        function resetCellEventHandlers() {
+            GRID.resetHover();
+            GRID.onCellClick((x, y) => () => {
+                GRID.toggleCell(x, y);
+                addEdit([{ x, y }]);
+            });
+        }
+
+        function setPreviewPattern(pattern) {
+            GRID.onCellHover(
+                (x, y) => () => {
+                    GRID.previewPattern(pattern, x, y, true);
+                },
+                (x, y) => () => {
+                    GRID.previewPattern(pattern, x, y, false);
+                }
+            );
+            GRID.onCellClick(
+                (x, y) => () => {
+                    const newCells = GRID.addPattern(pattern, x, y);
+                    addEdit(newCells);
+                    INPUT.populationCount += newCells.length;
+                    INPUT.patternId = null;
+                    resetCellEventHandlers();
+                }
+            );
+        }
+
+
     </script>
 </body>
 
