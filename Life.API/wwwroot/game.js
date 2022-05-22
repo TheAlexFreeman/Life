@@ -95,9 +95,9 @@ class Game {
 
     toggleCell(p) {
         if (this.hasCell(p)) {
-            this.removeCell(p);
+            return this.removeCell(p);
         } else {
-            this.addCell(p);
+            return this.addCell(p);
         }
     }
 
@@ -108,9 +108,11 @@ class Game {
     addCell(p) {
         this._liveCells.add(p);
         this._relevantCells.addPoints(p, ...this.neighbors(p));
+        return true;
     }
 
     removeCell(p) {
         this._liveCells.remove(p);
+        return false;
     }
 }

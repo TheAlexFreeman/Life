@@ -23,7 +23,7 @@
         it evolves. It is Turing complete and can simulate a universal constructor or any other Turing machine.
     </p>
     <p>
-        The universe of the Game of Life is an infinite, two-dimensional orthogonal GRID of square cells, each of which
+        The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which
         is in
         one of two possible states, live or dead (or populated and unpopulated, respectively). Every cell interacts with
         its
@@ -65,9 +65,9 @@
         rules continue to be applied repeatedly to create further generations.
     </p>
     <hr />
-    <div id="GRID-container">
-        <div id="GRID-actions">
-            <div id="GRID-size">
+    <div id="grid-container">
+        <div id="grid-actions">
+            <div id="grid-size">
                 <label for="width">
                     Board Width:
                     <input id="width" type="number" value="150" />
@@ -85,7 +85,7 @@
 
             <br />
 
-            <div id="GRID-colors">
+            <div id="grid-colors">
                 <label for="cell-color">
                     Cell Color: <input id="cell-color" type="color" value="#32cd32"
                         onchange="updateCellColorAction()" />
@@ -98,7 +98,7 @@
 
             <br />
 
-            <div id="GRID-library">
+            <div id="grid-library">
                 <label for="pattern-name">
                     Pattern Name:
                     <input id="pattern-name" type="text" />
@@ -124,7 +124,7 @@
             Population: <span id="pop-counter">0</span>
         </div>
 
-        <div id="GRID">
+        <div id="grid">
         </div>
     </div>
 
@@ -149,14 +149,14 @@
 
     <script src="points.js" asp-append-version="true"></script>
     <script src="game.js" asp-append-version="true"></script>
-    <script src="GRID.js" asp-append-version="true"></script>
+    <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
     <script src="input.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
-        const GRID = new Grid(document.getElementById('GRID'), INPUT.size, INPUT.colors);
+        const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
         let isDirty = false;
 
@@ -198,7 +198,7 @@
 
         function updateSizeAction() {
             GRID.setSize(INPUT.size);
-            createGRID(GRID.pattern);
+            createGrid(GRID.pattern);
         }
 
         function updateBordersAction() {
@@ -266,9 +266,7 @@
             cell.style.backgroundColor =
                 isAlive ? INPUT.cellColor : INPUT.backgroundColor;
             cell.onclick = () => {
-                GRID.toggleCell(x, y);
-                INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
-                addEdit([{ x, y }]);
+                toggleCell(x, y);
             }
             cell.onmouseover = () => { cell.style.opacity = 0.5; }
             cell.onmouseout = () => { cell.style.opacity = 1.0; }
@@ -276,6 +274,12 @@
         }
 
         // Click/hover handler functions
+
+        function toggleCell(x, y) {
+            GRID.toggleCell(x, y);
+            INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
+            addEdit([{ x, y }]);
+        }
 
         function addEdit(points) {
             if (MEMORY.length) {
@@ -290,8 +294,7 @@
         function resetCellEventHandlers() {
             GRID.resetHover();
             GRID.onCellClick((x, y) => () => {
-                GRID.toggleCell(x, y);
-                addEdit([{ x, y }]);
+                toggleCell(x, y);
             });
         }
 
@@ -306,13 +309,17 @@
             );
             GRID.onCellClick(
                 (x, y) => () => {
-                    const newCells = GRID.addPattern(pattern, x, y);
-                    addEdit(newCells);
-                    INPUT.populationCount += newCells.length;
+                    addPattern(pattern, x, y);
                     INPUT.patternId = null;
                     resetCellEventHandlers();
                 }
             );
+        }
+
+        function addPattern(pattern, x, y) {
+            const newCells = GRID.addPattern(pattern, x, y);
+            addEdit(newCells);
+            INPUT.populationCount += newCells.length;
         }
 
 

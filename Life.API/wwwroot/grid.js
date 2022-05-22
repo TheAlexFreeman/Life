@@ -92,6 +92,7 @@ class Grid {
 
     colorSquare(x, y, color) {
         this._grid[x][y].style.backgroundColor = color;
+        return color !== this.colors.off;
     }
 
     setCellColor(color) {
@@ -159,8 +160,10 @@ class Grid {
     }
 
     toggleCell(x, y) {
-        this.game.toggleCell({ x, y });
-        this.correctColor(x, y);
+        return this.colorSquare(x, y,
+            this.game.toggleCell({ x, y })
+                ? this.colors.on : this.colors.off
+        );
     }
 
     translatePattern(pattern, dx = 0, dy = 0) {
