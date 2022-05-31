@@ -11,24 +11,7 @@ class InputHandler {
     borderCheckbox = document.getElementById('borders');
     patternNameInput = document.getElementById('pattern-name');
 
-    generationCounter = document.getElementById('gen-counter');
-    populationCounter = document.getElementById('pop-counter');
-
     constructor() { }
-
-    get generationCount() {
-        return parseInt(this.generationCounter.textContent);
-    }
-    set generationCount(value) {
-        this.generationCounter.textContent = value;
-    }
-
-    get populationCount() {
-        return parseInt(this.populationCounter.textContent);
-    }
-    set populationCount(value) {
-        this.populationCounter.textContent = value;
-    }
 
     get borders() {
         return this.borderCheckbox.checked;

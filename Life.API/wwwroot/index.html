@@ -152,13 +152,13 @@
     <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
     <script src="input.js" asp-append-version="true"></script>
+    <script src="memory.js" asp-append-version="true"></script>
     <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
+        const MEMORY = new GameMemory();
         const INPUT = new InputHandler();
         const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
-        const MEMORY = [];
-        let isDirty = false;
 
         createGrid();
         getPatternsAction();
@@ -176,24 +176,16 @@
         // User Actions
 
         function tickAction() {
-            const changes = GRID.tick();
-            MEMORY.push(changes);
-            INPUT.generationCount += 1;
-            INPUT.populationCount = GRID.population;
+            const changes = MEMORY.addTick(GRID.tick());
+            MEMORY.populationCount = GRID.population;
         }
 
         function backAction() {
-            const changes = MEMORY.pop();
-            if (changes[0] === null) {
-                changes.shift();
-            } else {
-                INPUT.generationCount -= 1
-            }
-
+            const changes = MEMORY.back();
             for (let { x, y } of changes) {
                 GRID.toggleCell(x, y);
             }
-            INPUT.populationCount = GRID.population;
+            MEMORY.populationCount = GRID.population;
         }
 
         function updateSizeAction() {
@@ -277,18 +269,8 @@
 
         function toggleCell(x, y) {
             GRID.toggleCell(x, y);
-            INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
-            addEdit([{ x, y }]);
-        }
-
-        function addEdit(points) {
-            if (MEMORY.length) {
-                if (!isDirty) {
-                    MEMORY.push([null]);
-                    isDirty = true;
-                }
-                MEMORY[MEMORY.length - 1].push(...points);
-            }
+            MEMORY.populationCount += GRID.hasCell(x, y) ? 1 : -1;
+            MEMORY.addEdit([{ x, y }]);
         }
 
         function resetCellEventHandlers() {
@@ -318,8 +300,8 @@
 
         function addPattern(pattern, x, y) {
             const newCells = GRID.addPattern(pattern, x, y);
-            addEdit(newCells);
-            INPUT.populationCount += newCells.length;
+            MEMORY.addEdit(newCells);
+            MEMORY.populationCount += newCells.length;
         }
 
 
