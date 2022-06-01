@@ -116,6 +116,9 @@
         <div id="game-buttons">
             <button onclick="backAction()">&lt;&lt;&lt;</button>
             <button onclick="tickAction()">&gt;&gt;&gt;</button>
+            <input id="speed-slider" type="range" max="10" onchange="playAction()" />
+            <button id="play" onclick="playAction()">PLAY</button>
+            <button id="stop" onclick="stopAction()">STOP</button>
         </div>
 
         <div id="game-stats">
@@ -160,15 +163,53 @@
         const MEMORY = [];
         let isDirty = false;
 
+        let interval = null;
+        let isRunning = false;
+
+        function playAction() {
+            if (isRunning) {
+                clearInterval(interval);
+            } else {
+                isRunning = true;
+            }
+            interval = setInterval(() => tickAction(), INPUT.tickDelay);
+        }
+
+        function stopAction() {
+            clearInterval(interval);
+            isRunning = false;
+        }
+
         createGrid();
         getPatternsAction();
 
         window.onkeydown = function (event) {
             if (event.target === document.body) {
                 switch (event.keyCode) {
-                    case 39: tickAction(); break;
-                    case 37: backAction(); break;
-                    case 27: resetCellEventHandlers(); break;
+                    case 27: // escape
+                        resetCellEventHandlers(); break;
+                    case 32: // space bar
+                        event.preventDefault();
+                        isRunning ? stopAction() : playAction();
+                        break;
+                    case 37: // left arrow
+                        backAction(); break;
+                    case 38:
+                        if (isRunning) {
+                            event.preventDefault();
+                            INPUT.speedSlider.stepUp();
+                            playAction();
+                        }
+                        break;
+                    case 39: // right arrow
+                        tickAction(); break;
+                    case 40:
+                        if (isRunning) {
+                            event.preventDefault();
+                            INPUT.speedSlider.stepDown();
+                            playAction();
+                        }
+                        break;
                 }
             }
         };
@@ -176,6 +217,9 @@
         // User Actions
 
         function tickAction() {
+            if (isDirty) {
+                isDirty = false;
+            }
             const changes = GRID.tick();
             MEMORY.push(changes);
             INPUT.generationCount += 1;
@@ -246,7 +290,7 @@
         function createGrid(cells = []) {
             GRID.deleteContent();
             for (let x = 0; x < INPUT.size.x; x++) {
-                const row = createRow(x, INPUT.size.y, cells);
+                const row = createRow(x, INPUT.size.y, cells.filter(p => p.x === x));
                 GRID.appendRow(row);
             }
             GRID.setBorders(INPUT.borders);
@@ -255,7 +299,7 @@
         function createRow(x = 0, size = 10, cells = []) {
             const row = create('div', 'row');
             for (let y = 0; y < size; y++) {
-                const cell = createCell(x, y, cells.includes({ x, y }));
+                const cell = createCell(x, y, cells.some(p => p.y === y));
                 row.appendChild(cell);
             }
             return row;

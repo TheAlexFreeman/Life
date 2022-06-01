@@ -10,6 +10,26 @@ h2 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
+#play {
+    background-color: limegreen;
+    color: white;
+    border: 1px solid gray;
+}
+
+#play:hover {
+    opacity: 0.8;
+}
+
+#stop {
+    background-color: red;
+    color: white;
+    border: 1px solid gray;
+}
+
+#stop:hover {
+    opacity: 0.8;
+}
+
 #grid-actions {
     display: inline-block;
     border: 1px solid black;

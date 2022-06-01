@@ -1,4 +1,5 @@
 class InputHandler {
+    speedSlider = document.getElementById('speed-slider');
     menuSelect = document.getElementById('pattern-menu');
     sizeInputs = {
         width: document.getElementById('width'),
@@ -15,6 +16,23 @@ class InputHandler {
     populationCounter = document.getElementById('pop-counter');
 
     constructor() { }
+
+    get tickDelay() {
+        switch (this.speedSlider.valueAsNumber) {
+            case 0: return 750;
+            case 1: return 666;
+            case 2: return 500;
+            case 3: return 333;
+            case 4: return 250;
+            case 5: return 125;
+            case 6: return 88;
+            case 7: return 50;
+            case 8: return 20;
+            case 9: return 10;
+            case 10: return 1;
+            default: return 1000;
+        }
+    }
 
     get generationCount() {
         return parseInt(this.generationCounter.textContent);
