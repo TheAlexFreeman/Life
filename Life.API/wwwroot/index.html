@@ -242,7 +242,7 @@
 
         function updateSizeAction() {
             GRID.setSize(INPUT.size);
-            createGrid(GRID.pattern);
+            createGrid(GRID.normalizedPattern);
         }
 
         function updateBordersAction() {
@@ -343,17 +343,18 @@
         }
 
         function setPreviewPattern(pattern) {
+            const { points } = pattern;
             GRID.onCellHover(
                 (x, y) => () => {
-                    GRID.previewPattern(pattern, x, y, true);
+                    GRID.previewPattern(points, x, y, true);
                 },
                 (x, y) => () => {
-                    GRID.previewPattern(pattern, x, y, false);
+                    GRID.previewPattern(points, x, y, false);
                 }
             );
             GRID.onCellClick(
                 (x, y) => () => {
-                    addPattern(pattern, x, y);
+                    addPattern(points, x, y);
                     INPUT.patternId = null;
                     resetCellEventHandlers();
                 }
