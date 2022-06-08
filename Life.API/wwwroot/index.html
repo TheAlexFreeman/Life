@@ -123,7 +123,7 @@
 
         <div id="game-stats">
             Generation: <span id="gen-counter" onclick="editGenerationAction()">0</span>
-            <input hidden type="number" id="gen-input" onchange="setGenerationAction()" />
+            <input hidden type="number" id="gen-input" onblur="INPUT.hideGenerationInput()" onchange="setGenerationAction()" />
             <br>
             Population: <span id="pop-counter">0</span>
         </div>

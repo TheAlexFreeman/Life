@@ -92,6 +92,7 @@ class InputHandler {
         this.generationInput.value = this.generationCount;
         this.generationCounter.hidden = true;
         this.generationInput.hidden = false;
+        this.generationInput.focus();
     }
 
     hideGenerationInput() {
