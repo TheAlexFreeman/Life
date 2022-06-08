@@ -122,7 +122,8 @@
         </div>
 
         <div id="game-stats">
-            Generation: <span id="gen-counter">0</span>
+            Generation: <span id="gen-counter" onclick="editGenerationAction()">0</span>
+            <input type="number" id="gen-input" onchange="setGenerationAction()" />
             <br>
             Population: <span id="pop-counter">0</span>
         </div>
@@ -162,6 +163,23 @@
         const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
         let isDirty = false;
+
+        const genInput = document.getElementById('gen-input');
+        genInput.hidden = true;
+
+        function editGenerationAction() {
+            genInput.value = INPUT.generationCount;
+            genInput.hidden = false;
+            INPUT.generationCounter.hidden = true;
+        }
+
+        function setGenerationAction() {
+            genInput.hidden = true;
+            INPUT.generationCounter.hidden = false;
+            while (INPUT.generationCount !== parseInt(genInput.value)) {
+                INPUT.generationCount < parseInt(genInput.value) ? tickAction() : backAction();
+            }
+        }
 
         let interval = null;
         let isRunning = false;

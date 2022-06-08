@@ -10,6 +10,10 @@ h2 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
+#gen-input {
+    width: 45px;
+}
+
 #play {
     background-color: limegreen;
     color: white;
