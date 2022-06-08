@@ -13,6 +13,7 @@ class InputHandler {
     patternNameInput = document.getElementById('pattern-name');
 
     generationCounter = document.getElementById('gen-counter');
+    generationInput = document.getElementById('gen-input');
     populationCounter = document.getElementById('pop-counter');
 
     constructor() { }
@@ -85,6 +86,17 @@ class InputHandler {
 
     get patternId() {
         return this.menuSelect.value;
+    }
+
+    showGenerationInput() {
+        this.generationInput.value = this.generationCount;
+        this.generationCounter.hidden = true;
+        this.generationInput.hidden = false;
+    }
+
+    hideGenerationInput() {
+        this.generationInput.hidden = true;
+        this.generationCounter.hidden = false;
     }
 
     validatePattern(grid) {
