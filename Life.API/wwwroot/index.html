@@ -123,7 +123,8 @@
 
         <div id="game-stats">
             Generation: <span id="gen-counter" onclick="editGenerationAction()">0</span>
-            <input hidden type="number" id="gen-input" onblur="INPUT.hideGenerationInput()" onchange="setGenerationAction()" />
+            <input hidden type="number" id="gen-input" onblur="INPUT.hideGenerationInput()"
+                onchange="setGenerationAction()" />
             <br>
             Population: <span id="pop-counter">0</span>
         </div>
@@ -207,7 +208,7 @@
                         break;
                     case 37: // left arrow
                         backAction(); break;
-                    case 38:
+                    case 38: // up arrow
                         if (isRunning) {
                             event.preventDefault();
                             INPUT.speedSlider.stepUp();
@@ -216,7 +217,7 @@
                         break;
                     case 39: // right arrow
                         tickAction(); break;
-                    case 40:
+                    case 40: // down arrow
                         if (isRunning) {
                             event.preventDefault();
                             INPUT.speedSlider.stepDown();
@@ -251,6 +252,10 @@
                 GRID.toggleCell(x, y);
             }
             INPUT.populationCount = GRID.population;
+        }
+
+        function clearBoardAction() {
+            GRID.clear();
         }
 
         function updateSizeAction() {
