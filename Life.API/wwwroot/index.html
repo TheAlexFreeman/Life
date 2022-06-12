@@ -165,18 +165,6 @@
         const MEMORY = [];
         let isDirty = false;
 
-        function editGenerationAction() {
-            INPUT.showGenerationInput();
-        }
-
-        function setGenerationAction() {
-            INPUT.hideGenerationInput();
-            const target = parseInt(INPUT.generationInput.value);
-            while (INPUT.generationCount !== target) {
-                INPUT.generationCount < target ? tickAction() : backAction();
-            }
-        }
-
         let interval = null;
         let isRunning = false;
 
@@ -254,8 +242,22 @@
             INPUT.populationCount = GRID.population;
         }
 
+        function editGenerationAction() {
+            INPUT.showGenerationInput();
+        }
+
+        function setGenerationAction() {
+            INPUT.hideGenerationInput();
+            const target = parseInt(INPUT.generationInput.value);
+            while (INPUT.generationCount !== target) {
+                INPUT.generationCount < target ? tickAction() : backAction();
+            }
+        }
+
         function clearBoardAction() {
             GRID.clear();
+            INPUT.populationCount = 0;
+            INPUT.generationCount = 0;
         }
 
         function updateSizeAction() {
