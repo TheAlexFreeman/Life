@@ -1,4 +1,12 @@
-﻿p,
+﻿/* embed::-webkit-scrollbar {
+    display: none;
+}
+
+div::-webkit-scrollbar {
+    display: none;
+} */
+
+p,
 li,
 a {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -8,6 +16,22 @@ a {
 h1,
 h2 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+#grid-wrapper {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    max-width: 98%;
+    max-height: 95vh;
+}
+
+#grid {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    white-space: nowrap;
 }
 
 #gen-input {
