@@ -2,6 +2,10 @@ function point(x = 0, y = 0) {
     return { x, y };
 }
 
+function pointEquals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
 const ORIGIN = { x: 0, y: 0 };
 
 class Points {
@@ -98,7 +102,15 @@ class Points {
         return result;
     }
 
-    map(func = p => p) {
+    forEach(action = ({x, y}) => {}) {
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                action({x, y});
+            }
+        }
+    }
+
+    map(func = ({x, y}) => any) {
         const result = [];
         for (let [x, ys] of this._map) {
             for (let y of ys) {
@@ -109,6 +121,18 @@ class Points {
     }
 
     filter(pred = _ => true) {
+        const result = new Points();
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                if (pred({x, y})) {
+                    result.add({x, y});
+                }
+            }
+        }
+        return result;
+    }
+
+    filterToList(pred = _ => true) {
         const result = [];
         for (let [x, ys] of this._map) {
             for (let y of ys) {
@@ -141,6 +165,11 @@ class Points {
     has(p = ORIGIN) {
         const { x, y } = p;
         return this._map.has(x) && this._map.get(x).has(y);
+    }
+
+    equals(pts) {
+        if (!(pts instanceof Points)) return false;
+        return pts.size === this.size && pts.map(p => this.has(p)).reduce((a, b) => a && b, true);
     }
 
     add(p = ORIGIN) {

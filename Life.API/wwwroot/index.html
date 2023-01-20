@@ -163,7 +163,8 @@
         const INPUT = new InputHandler();
         const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
-        let isDirty = false;
+
+        let stopAtMaxEntropy = true;
 
         let interval = null;
         let isRunning = false;
@@ -180,6 +181,7 @@
         function stopAction() {
             clearInterval(interval);
             isRunning = false;
+            stopAtMaxEntropy = true;
         }
 
         createGrid();
@@ -216,13 +218,24 @@
             }
         };
 
+        function detectEntropy(changes) {
+            if (changes.equals(MEMORY[MEMORY.length - 1])) {
+                const stop = confirm("Max entropy detected.\nPress 'OK' to stop the game or 'Cancel' to keep it running.");
+                if (stop) {
+                    stopAction();
+                } else {
+                    stopAtMaxEntropy = false;
+                }
+            }
+        }
+
         // User Actions
 
         function tickAction() {
-            if (isDirty) {
-                isDirty = false;
-            }
             const changes = GRID.tick();
+            if (stopAtMaxEntropy) {
+                detectEntropy(changes);
+            }
             MEMORY.push(changes);
             INPUT.generationCount += 1;
             INPUT.populationCount = GRID.population;
@@ -230,14 +243,13 @@
 
         function backAction() {
             const changes = MEMORY.pop();
-            if (changes[0] === null) {
-                changes.shift();
-            } else {
-                INPUT.generationCount -= 1
-            }
-
-            for (let { x, y } of changes) {
-                GRID.toggleCell(x, y);
+            if (changes instanceof Points) {
+                // Natural generation
+                changes.forEach(({x, y}) => GRID.toggleCell(x, y));
+                INPUT.generationCount -= 1;
+            } else if (changes instanceof Array) {
+                // Edits since last tick
+                changes.forEach(({x, y}) => GRID.toggleCell(x, y));
             }
             INPUT.populationCount = GRID.population;
         }
@@ -343,13 +355,13 @@
             GRID.toggleCell(x, y);
             INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
             addEdit([{ x, y }]);
+            stopAtMaxEntropy = true;
         }
 
         function addEdit(points) {
             if (MEMORY.length) {
-                if (!isDirty) {
-                    MEMORY.push([null]);
-                    isDirty = true;
+                if (!(MEMORY[MEMORY.length - 1] instanceof Array)) {
+                    MEMORY.push([]);
                 }
                 MEMORY[MEMORY.length - 1].push(...points);
             }

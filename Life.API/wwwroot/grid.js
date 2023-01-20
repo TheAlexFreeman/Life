@@ -41,9 +41,7 @@ class Grid {
 
     tick() {
         const changes = this.game.cellsToChange;
-        for (let { x, y } of changes) {
-            this.toggleCell(x, y);
-        }
+        changes.forEach(({x, y}) => this.toggleCell(x, y));
         return changes;
     }
 
