@@ -165,6 +165,7 @@
         const MEMORY = [];
 
         let stopAtMaxEntropy = true;
+        let entropyPeriod = 1;
 
         let interval = null;
         let isRunning = false;
@@ -219,8 +220,22 @@
         };
 
         function detectEntropy(changes) {
-            if (changes.equals(MEMORY[MEMORY.length - 1])) {
-                const stop = confirm("Max entropy detected.\nPress 'OK' to stop the game or 'Cancel' to keep it running.");
+            let maxEntropy = false;
+            if (!changes.size) {
+                maxEntropy = true;
+                entropyPeriod = 1;
+            } else {
+                // TODO: Remove redundant checks
+                for (let i = 1; i <= MEMORY.length; i++) {
+                    if (changes.equals(MEMORY[MEMORY.length - i])) {
+                        maxEntropy = true;
+                        entropyPeriod = i;
+                        break;
+                    }
+                }
+            }
+            if (maxEntropy) {
+                const stop = confirm(`Max entropy detected (period ${entropyPeriod}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
                 if (stop) {
                     stopAction();
                 } else {
@@ -233,7 +248,7 @@
 
         function tickAction() {
             const changes = GRID.tick();
-            if (stopAtMaxEntropy) {
+            if (isRunning && stopAtMaxEntropy) {
                 detectEntropy(changes);
             }
             MEMORY.push(changes);
@@ -268,6 +283,8 @@
 
         function clearBoardAction() {
             GRID.clear();
+            // TODO: Do this more efficiently
+            while(MEMORY.length) { MEMORY.pop() }
             INPUT.populationCount = 0;
             INPUT.generationCount = 0;
         }
