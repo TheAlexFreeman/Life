@@ -2,8 +2,16 @@ function point(x = 0, y = 0) {
     return { x, y };
 }
 
-function pointEquals(p1, p2) {
+function ptEquals(p1, p2) {
     return p1.x === p2.x && p1.y === p2.y;
+}
+
+function ptAdd(p1, p2) {
+    return point(p1.x + p2.x, p1.y, p2.y);
+}
+
+function ptSub(p1, p2) {
+    return point(p1.x - p2.x, p1.y - p2.y);
 }
 
 const ORIGIN = { x: 0, y: 0 };
@@ -20,6 +28,56 @@ class Points {
         }
     }
 
+    has(p = ORIGIN) {
+        const { x, y } = p;
+        return this._map.has(x) && this._map.get(x).has(y);
+    }
+
+    add(p = ORIGIN) {
+        const { x, y } = p;
+        if (!this._map.has(x)) {
+            this._map.set(x, new Set());
+        }
+        this._map.get(x).add(y);
+    }
+
+    remove(p = ORIGIN) {
+        const { x, y } = p;
+        if (this._map.has(x)) {
+            this._map.get(x).delete(y);
+        }
+    }
+
+    clear() {
+        this._map.clear();
+    }
+
+    forEach(action = ({x, y}) => {}) {
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                action({x, y});
+            }
+        }
+    }
+
+    some(pred = _ => true) {
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                if (pred({x, y})) return true;
+            }
+        }
+        return false;
+    }
+
+    all(pred = _ => true) {
+        for (let [x, ys] of this._map) {
+            for (let y of ys) {
+                if (!pred({x, y})) return false;
+            }
+        }
+        return true;
+    }
+
     get hasPoints() {
         return this._map.size > 0;
     }
@@ -33,13 +91,7 @@ class Points {
     }
 
     get list() {
-        const result = [];
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                result.push(point(x, y));
-            }
-        }
-        return result;
+        return this.map(p => p);
     }
 
     get max() {
@@ -92,57 +144,9 @@ class Points {
     }
 
     get atOrigin() {
-        const result = [];
-        const min = this.min;
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                result.push(point(x - min.x, y - min.y));
-            }
-        }
-        return result;
+        return this.map(p => ptSub(p, this.min));
     }
 
-    forEach(action = ({x, y}) => {}) {
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                action({x, y});
-            }
-        }
-    }
-
-    map(func = ({x, y}) => any) {
-        const result = [];
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                result.push(func({ x, y }));
-            }
-        }
-        return result;
-    }
-
-    filter(pred = _ => true) {
-        const result = new Points();
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                if (pred({x, y})) {
-                    result.add({x, y});
-                }
-            }
-        }
-        return result;
-    }
-
-    filterToList(pred = _ => true) {
-        const result = [];
-        for (let [x, ys] of this._map) {
-            for (let y of ys) {
-                if (pred({ x, y })) {
-                    result.push({ x, y });
-                }
-            }
-        }
-        return result;
-    }
 
     inBox(min = ORIGIN, max = ORIGIN) {
         const result = new Points();
@@ -162,37 +166,42 @@ class Points {
         return this.inBox(ORIGIN, size);
     }
 
-    has(p = ORIGIN) {
-        const { x, y } = p;
-        return this._map.has(x) && this._map.get(x).has(y);
+
+    map(func = ({x, y}) => any) {
+        const result = [];
+        this.forEach(p => result.push(func(p)));
+        return result;
     }
+
+    filter(pred = _ => true) {
+        const result = new Points();
+        this.forEach(p => {
+            if (pred(p)) {
+                result.add(p);
+            }
+        });
+        return result;
+    }
+
+    filterToList(pred = _ => true) {
+        const result = [];
+        this.forEach(p => {
+            if (pred(p)) {
+                result.push(p);
+            }
+        });
+        return result;
+    }
+
 
     equals(pts) {
         if (!(pts instanceof Points)) return false;
-        return pts.size === this.size && pts.map(p => this.has(p)).reduce((a, b) => a && b, true);
-    }
-
-    add(p = ORIGIN) {
-        const { x, y } = p;
-        if (!this._map.has(x)) {
-            this._map.set(x, new Set());
-        }
-        this._map.get(x).add(y);
+        if (pts.size !== this.size) return false;
+        return this.all(p => pts.has(p));
     }
 
     addPoints(...points) {
         points.forEach(p => this.add(p));
-    }
-
-    remove(p = ORIGIN) {
-        const { x, y } = p;
-        if (this._map.has(x)) {
-            this._map.get(x).delete(y);
-        }
-    }
-
-    clear() {
-        this._map.clear();
     }
 
     union(points) {
@@ -210,11 +219,7 @@ class Points {
 
     translate(dx, dy) {
         const result = new Points();
-        for (let [x, ys] of points._map) {
-            for (let y of ys) {
-                result.add({ x: x + dx, y: y + dy });
-            }
-        }
+        this.forEach(({x, y}) => result.add({ x: x + dx, y: y + dy }));
         return result;
     }
 }

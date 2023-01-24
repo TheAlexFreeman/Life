@@ -63,6 +63,8 @@ class Game {
         if (liveNeighborCount < 2) {
             this._relevantCells.remove(point);
         }
+        // This is where the magic happens!!!
+        // TODO: Account for colors in 2/4/multicolor modes
         if (this.hasCell(point)) return liveNeighborCount < 2 || liveNeighborCount > 3;
         return liveNeighborCount === 3;
     }
