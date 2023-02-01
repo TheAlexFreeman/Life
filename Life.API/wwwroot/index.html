@@ -164,8 +164,8 @@
         const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
 
-        let stopAtMaxEntropy = true;
-        let entropyPeriod = 1;
+        let stopAtLoop = false;
+        let loopLength = 1;
 
         let interval = null;
         let isRunning = false;
@@ -182,7 +182,7 @@
         function stopAction() {
             clearInterval(interval);
             isRunning = false;
-            stopAtMaxEntropy = true;
+            stopAtLoop = true;
         }
 
         createGrid();
@@ -219,26 +219,27 @@
             }
         };
 
-        function detectEntropy(changes) {
-            let maxEntropy = false;
+        function detectLoop(changes) {
+            let hasLoop = false;
             if (!changes.size) {
-                maxEntropy = true;
-                entropyPeriod = 1;
+                hasLoop = true;
+                loopLength = 1;
             } else {
                 for (let i = 1; i <= MEMORY.length; i++) {
                     if (changes.equals(MEMORY[MEMORY.length - i])) {
-                        maxEntropy = true;
-                        entropyPeriod = i;
+                        hasLoop = true;
+                        loopLength = i;
+                        // TODO: Go back `i` generations to verify that the past state is equal to the current state
                         break;
                     }
                 }
             }
-            if (maxEntropy) {
-                const stop = confirm(`Max entropy detected (period ${entropyPeriod}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
+            if (hasLoop) {
+                const stop = confirm(`Loop detected (length ${loopLength}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
                 if (stop) {
                     stopAction();
                 } else {
-                    stopAtMaxEntropy = false;
+                    stopAtLoop = false;
                 }
             }
         }
@@ -247,8 +248,8 @@
 
         function tickAction() {
             const changes = GRID.tick();
-            if (isRunning && stopAtMaxEntropy) {
-                detectEntropy(changes);
+            if (isRunning && stopAtLoop) {
+                detectLoop(changes);
             }
             MEMORY.push(changes);
             INPUT.generationCount += 1;
@@ -371,7 +372,7 @@
             GRID.toggleCell(x, y);
             INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
             addEdit([{ x, y }]);
-            stopAtMaxEntropy = true;
+            stopAtLoop = true;
         }
 
         function addEdit(points) {

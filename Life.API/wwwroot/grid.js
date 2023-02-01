@@ -78,17 +78,21 @@ class Grid {
         }
     }
 
+    colorAt(x = 0, y = 0) {
+        return this._grid[x][y].style.backgroundColor;
+    }
+
     setColors(colors) {
         this.colors = colors;
         this._mapXY((x, y) => this.correctColor(x, y));
     }
 
-    correctColor(x, y) {
+    correctColor(x = 0, y = 0) {
         const { on, off } = this.colors;
         this.colorSquare(x, y, this.hasCell(x, y) ? on : off);
     }
 
-    colorSquare(x, y, color) {
+    colorSquare(x = 0, y = 0, color) {
         this._grid[x][y].style.backgroundColor = color;
         return color !== this.colors.off;
     }
@@ -166,9 +170,9 @@ class Grid {
 
     translatePattern(pattern, dx = 0, dy = 0) {
         const points = pattern.map(p => ({
-            x: p.x + dx,
-            y: p.y + dy
-        })
+                x: p.x + dx,
+                y: p.y + dy
+            })
         );
         return this.hasBorders ? points.filter(p => this.includes(p)) : points.map(p => this.mod(p));
     }

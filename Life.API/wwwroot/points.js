@@ -147,6 +147,11 @@ class Points {
         return this.map(p => ptSub(p, this.min));
     }
 
+    get neighbors() {
+        const result = new Points();
+        this.forEach(p => result.addPoints(...neighbors(p).filter(pt => !this.has(pt))));
+        return result;
+    }
 
     inBox(min = ORIGIN, max = ORIGIN) {
         const result = new Points();
