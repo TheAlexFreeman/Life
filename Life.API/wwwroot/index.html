@@ -225,8 +225,13 @@
                 hasLoop = true;
                 loopLength = 1;
             } else {
+                const pastChanges = [];
                 for (let i = 1; i <= MEMORY.length; i++) {
-                    if (changes.equals(MEMORY[MEMORY.length - i])) {
+                    const m = MEMORY[MEMORY.length - i]
+                    if (pastChanges instanceof Array) break;
+                    pastChanges.push(m);
+                    if (changes.equals(m)) {
+                        const generation = INPUT.generationCount - i;
                         hasLoop = true;
                         loopLength = i;
                         // TODO: Go back `i` generations to verify that the past state is equal to the current state
@@ -248,9 +253,9 @@
 
         function tickAction() {
             const changes = GRID.tick();
-            if (isRunning && stopAtLoop) {
-                detectLoop(changes);
-            }
+            // if (isRunning && stopAtLoop) {
+            //     detectLoop(changes);
+            // }
             MEMORY.push(changes);
             INPUT.generationCount += 1;
             INPUT.populationCount = GRID.population;
