@@ -7,7 +7,7 @@ function ptEquals(p1, p2) {
 }
 
 function ptAdd(p1, p2) {
-    return point(p1.x + p2.x, p1.y, p2.y);
+    return point(p1.x + p2.x, p1.y + p2.y);
 }
 
 function ptSub(p1, p2) {
@@ -26,6 +26,22 @@ class Points {
             }
             this._map.get(x).add(y);
         }
+    }
+
+    get hasPoints() {
+        return this._map.size > 0;
+    }
+
+    get size() {
+        let result = 0;
+        for (let [_, ys] of this._map) {
+            result += ys.size;
+        }
+        return result;
+    }
+
+    get list() {
+        return this.map(p => p);
     }
 
     has(p = ORIGIN) {
@@ -78,21 +94,6 @@ class Points {
         return true;
     }
 
-    get hasPoints() {
-        return this._map.size > 0;
-    }
-
-    get size() {
-        let result = 0;
-        for (let [_, ys] of this._map) {
-            result += ys.size;
-        }
-        return result;
-    }
-
-    get list() {
-        return this.map(p => p);
-    }
 
     get max() {
         const result = { x: 0, y: 0 }
@@ -222,27 +223,27 @@ class Points {
         }
     }
 
-    translate(dx, dy) {
+    translate(x, y) {
         const result = new Points();
-        this.forEach(({x, y}) => result.add({ x: x + dx, y: y + dy }));
+        this.forEach(p => result.add(ptAdd(p, {x, y})));
         return result;
     }
 }
 
 // Positional Calculations
 
-function comp(f, g) {
-    return p => f(g(p));
+function neighbor(x = 0, y = 0) {
+    return p => ptAdd(p, {x, y});
 }
 
-const N = p => ({ ...p, y: p.y + 1 });
-const S = p => ({ ...p, y: p.y - 1 });
-const E = p => ({ ...p, x: p.x - 1 });
-const W = p => ({ ...p, x: p.x + 1 });
-const NE = comp(N, E);
-const NW = comp(N, W);
-const SE = comp(S, E);
-const SW = comp(S, W);
+const N = neighbor(1, 0);
+const S = neighbor(-1, 0);
+const E = neighbor(0, 1);
+const W = neighbor(0, -1);
+const NE = neighbor(1, 1);
+const SE = neighbor(-1, 1);
+const NW = neighbor(1, -1);
+const SW = neighbor(-1, -1);
 
 const NEIGHBORS = [NW, N, NE, W, E, SW, S, SE];
 
