@@ -78,10 +78,12 @@ select {
 }
 
 .row {
-    height: 11px;
+    height: 10px;
+    z-index: -1;
 }
 
 .cell {
+    box-sizing: border-box;
     display: inline-block;
     height: 10px;
     width: 10px;

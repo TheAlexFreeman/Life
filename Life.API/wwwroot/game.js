@@ -1,7 +1,6 @@
 class Game {
     size;
     hasBorders = false;
-    memory = [];
     _liveCells = new Points();
     _relevantCells = new Points();
 
@@ -14,10 +13,6 @@ class Game {
                 this.addCell(p)
             }
         });
-    }
-
-    get steps() {
-        return this.memory.length;
     }
 
     get hasCells() {
@@ -51,7 +46,6 @@ class Game {
     clear() {
         this._liveCells.clear();
         this._relevantCells.clear();
-        this.memory = [];
     }
 
     get cellsToChange() {
