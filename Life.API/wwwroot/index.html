@@ -128,19 +128,19 @@
             <br>
             Population: <span id="pop-counter">0</span>
         </div>
-
-        <div id="grid">
-        </div>
+        <div id="root"></div>
+        <!-- <div id="grid">
+        </div> -->
     </div>
 
 
     <hr />
-    <table>
+    <table id="menu">
         <thead>
             <tr>
-                <td></td>
-                <td></td>
-                <td></td>
+                <th></th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -157,13 +157,14 @@
     <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
     <script src="input.js" asp-append-version="true"></script>
-    <script src="site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
-        const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
+        // const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
 
+        const SG = new SmartGrid(document.getElementById('root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders});
+        const GRID = SG;
         let stopAtLoop = false;
         let loopLength = 1;
 
@@ -185,7 +186,7 @@
             stopAtLoop = true;
         }
 
-        createGrid();
+        // createGrid();
         getPatternsAction();
 
         window.onkeydown = function (event) {
@@ -335,41 +336,6 @@
 
         // Creation of DOM elements
 
-        function create(tagName = 'div', className = '') {
-            const el = document.createElement(tagName);
-            el.className = className;
-            return el;
-        }
-
-        function createGrid(cells = []) {
-            GRID.deleteContent();
-            for (let x = 0; x < INPUT.size.x; x++) {
-                const row = createRow(x, INPUT.size.y, cells.filter(p => p.x === x));
-                GRID.appendRow(row);
-            }
-            GRID.setBorders(INPUT.borders);
-        }
-
-        function createRow(x = 0, size = 10, cells = []) {
-            const row = create('div', 'row');
-            for (let y = 0; y < size; y++) {
-                const cell = createCell(x, y, cells.some(p => p.y === y));
-                row.appendChild(cell);
-            }
-            return row;
-        }
-
-        function createCell(x = 0, y = 0, isAlive = false) {
-            const cell = create('span', 'cell');
-            cell.style.backgroundColor =
-                isAlive ? INPUT.cellColor : INPUT.backgroundColor;
-            cell.onclick = () => {
-                toggleCell(x, y);
-            }
-            cell.onmouseover = () => { cell.style.opacity = 0.5; }
-            cell.onmouseout = () => { cell.style.opacity = 1.0; }
-            return cell;
-        }
 
         // Click/hover handler functions
 
@@ -377,7 +343,6 @@
             GRID.toggleCell(x, y);
             INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
             addEdit([{ x, y }]);
-            stopAtLoop = true;
         }
 
         function addEdit(points) {
