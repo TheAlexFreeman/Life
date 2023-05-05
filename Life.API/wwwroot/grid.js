@@ -1,3 +1,204 @@
+function createElement(tagName, className) {
+    const result = document.createElement(tagName);
+    result.className = className;
+    return result;
+}
+
+class SmartGrid {
+    _game;
+    _grid = [];
+    settings = {
+        size: {x: 150, y: 150},
+        colors: {on: 'limegreen', off: 'lightgray'},
+    }
+
+    get size() {
+        return this.settings.size;
+    }
+
+
+    constructor(root, settings, cells = []) {
+        const {size, colors, borders} = settings;
+        this.settings.size = size;
+        this.colors = colors;
+        this._game = new Game(size, borders);
+        root.appendChild(this._createGrid(size));
+        this.setBorders(borders);
+        cells.forEach(({x, y}) => this.addCell(x, y));
+    }
+
+    get population() {
+        return this._game.population;
+    }
+
+    get pattern() {
+        return this._game.liveCells;
+    }
+
+    get normalizedPattern() {
+        return this._game.normalizedCells;
+    }
+
+    hasCell(x = 0, y = 0) {
+        return this._game.hasCell({ x, y });
+    }
+
+    getColor(x = 0, y = 0) {
+        return this._grid[x][y].style.backgroundColor;
+    }
+    setColor(x = 0, y = 0, color) {
+        this._grid[x][y].style.backgroundColor = color;
+    }
+
+    addCell(x, y, color='limegreen') {
+        this._game.addCell({x, y});
+        this.setColor(x, y, color);
+    }
+    removeCell(x, y) {
+        this._game.removeCell({x, y});
+        this.setColor(x, y, this.colors.off);
+    }
+
+    toggleCell(x, y, color='limegreen') {
+        if (this.hasCell(x, y)) {
+            this.removeCell(x, y);
+        } else {
+            this.addCell(x, y, color);
+        }
+    }
+
+    tick() {
+        const changes = this._game.cellsToChange;
+        changes.forEach(({x, y}) => this.toggleCell(x, y));
+        return changes;
+    }
+
+
+    _includesX(x) {
+        return x >= 0 && x < this.size.x;
+    }
+
+    _includesY(y) {
+        return y >= 0 && y < this.size.y;
+    }
+
+    includes(point) {
+        return this.includesX(point.x) && this.includesY(point.y);
+    }
+
+    mod(point) {
+        return {
+            x: point.x % this.size.x,
+            y: point.y % this.size.y,
+        }
+    }
+
+
+    _mapXY(func = (x, y) => { }) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                func(x, y);
+            }
+        }
+    }
+
+    _createCell(x, y) {
+        const cell = createElement('span', 'cell');
+        cell.onclick = () => {this.toggleCell(x, y);};
+        cell.onmouseover = () => cell.style.opacity = 0.5;
+        cell.onmouseout = () => cell.style.opacity = 1.0;
+        return cell;
+    }
+
+    _createRow(x, size) {
+        const row = [];
+        const rowElement = createElement('div', 'row');
+        for (let y = 0; y < size; y++) {
+            const cell = this._createCell(x, y);
+            row.push(cell);
+            rowElement.appendChild(cell);
+        }
+        this._grid.push(row);
+        return rowElement;
+    }
+
+    _createGrid(size) {
+        const gridElement = createElement('div', 'grid');
+        for (let x = 0; x < size.x; x++) {
+            gridElement.appendChild(this._createRow(x, size.y));
+        }
+        return gridElement;
+    }
+
+    setBorders(value = false) {
+        this._game.setBorders(value);
+        const borderStyle = value ? "1px solid black" : "1px dashed gray";
+        this._setBordersTopBottom(borderStyle);
+        this._setBordersLeftRight(borderStyle);
+    }
+
+    _setBordersTopBottom(borderStyle) {
+        const topRow = this._grid[0];
+        const bottomRow = this._grid[this.size.x - 1];
+        for (let y = 0; y < this.size.y; y++) {
+            topRow[y].style.borderTop = borderStyle;
+            bottomRow[y].style.borderBottom = borderStyle;
+        }
+    }
+
+    _setBordersLeftRight(borderStyle) {
+        const y = this.size.y - 1;
+        for (let row of this._grid) {
+            row[0].style.borderLeft = borderStyle;
+            row[y].style.borderRight = borderStyle;
+        }
+    }
+
+
+    translatePattern(pattern, dx = 0, dy = 0) {
+        const points = pattern.map(p => ({
+                x: p.x + dx,
+                y: p.y + dy
+            })
+        );
+        return this.hasBorders ? points.filter(p => this.includes(p)) : points.map(p => this.mod(p));
+    }
+
+    previewPattern(pattern, dx = 0, dy = 0, on = true) {
+        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
+            this.previewCell(x, y, on);
+        }
+    }
+
+    previewCell(x, y, on = true) {
+        const cell = this._grid[x][y];
+        cell.style.opacity = on ? 0.8 : 1.0;
+        cell.style.backgroundColor = on ? this.colors.on : this.colors.off;
+    }
+
+    onCellClick(clickHandler = (x, y) => () => { }) {
+        this._mapXY((x, y) => {
+            this._grid[x][y].onclick = clickHandler(x, y)
+        });
+    }
+
+    onCellHover(mouseOver = (x, y) => () => { }, mouseOut = (x, y) => () => { }) {
+        this._mapXY((x, y) => {
+            const cell = this._grid[x][y];
+            cell.onmouseover = mouseOver(x, y);
+            cell.onmouseout = mouseOut(x, y);
+        });
+    }
+
+    resetHover() {
+        this._mapXY((x, y) => {
+            const cell = this._grid[x][y];
+            cell.onmouseover = () => { cell.style.opacity = 0.5; };
+            cell.onmouseout = () => { cell.style.opacity = 1.0; };
+        });
+    }
+}
+
 class Grid {
     colors = { on: 'limegreen', off: 'lightgray' };
     root;
