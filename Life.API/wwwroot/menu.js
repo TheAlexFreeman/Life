@@ -1,4 +1,4 @@
-const _COLUMNS = ['name', 'preview'];
+const _COLUMNS = ['name', 'preview', 'edit', 'delete'];
 
 function createElement(tagName, className='', textContent='') {
     const element = document.createElement(tagName);
@@ -12,7 +12,11 @@ function createElement(tagName, className='', textContent='') {
 function _createTableHead() {
     const tHead = createElement('thead');
     const row = createElement('tr');
-    _COLUMNS.forEach(columnName => row.appendChild(createElement('th', 'menu-table-header', columnName)));
+    _COLUMNS.forEach(columnName => {
+        const headerCell = createElement('th');
+        headerCell.appendChild(createElement('span', 'menu-table-header', columnName))
+        row.appendChild(headerCell)
+    });
     tHead.appendChild(row);
     return tHead;
 }
@@ -40,6 +44,8 @@ class PatternMenu {
         row.appendChild(createElement('td', 'pattern-name', pattern.name));
         const previewCell = this._createPreviewCell(pattern);
         row.appendChild(previewCell);
+        row.appendChild(createElement('td', 'pattern-edit'));
+        row.appendChild(createElement('td', 'pattern-delete'));
         this._menu.appendChild(row);
     }
 
