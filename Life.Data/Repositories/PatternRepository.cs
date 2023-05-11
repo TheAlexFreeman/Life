@@ -17,7 +17,7 @@ namespace Life.Data.Repositories
         }
 
         public IEnumerable<Pattern> GetAllPatterns() {
-            return _context.Patterns;
+            return _context.Patterns.Include(p => p.Points);
         }
 
         public Pattern? GetPatternById(int id)
