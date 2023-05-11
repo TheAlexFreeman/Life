@@ -1,12 +1,18 @@
 ﻿p,
 li,
-a {
+a,
+th,
+td {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     font-size: large;
 }
 
 h1,
-h2 {
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
@@ -79,7 +85,6 @@ select {
 
 .row {
     height: 10px;
-    z-index: -1;
 }
 
 .cell {

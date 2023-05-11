@@ -1,0 +1,27 @@
+#menu > table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.menu-table-header {
+    font-size: larger;
+    font-weight: bold;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+tr.menu-item > td {
+    border: 1px solid gray;
+    padding-left: 20px;
+}
+
+.pattern-name-cell {
+    width: 200px;
+}
+
+.pattern-preview .row {
+    cursor: pointer;
+}
+
+.pattern-preview .cell {
+    cursor: pointer;
+}

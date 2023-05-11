@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Game of Life</title>
     <link rel="stylesheet" href="site.css" />
+    <link rel="stylesheet" href="menu.css" />
 </head>
 
 <body>
@@ -135,21 +136,8 @@
 
 
     <hr />
-    <table id="menu">
-        <thead>
-            <tr>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tbody>
+    <h1>Select a Pattern</h1>
+    <div id="menu"></div>
     </table>
 
     <script src="points.js" asp-append-version="true"></script>
@@ -157,19 +145,34 @@
     <script src="grid.js" asp-append-version="true"></script>
     <script src="api.js" asp-append-version="true"></script>
     <script src="input.js" asp-append-version="true"></script>
+    <script src="menu.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
         // const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
 
-        const SG = new SmartGrid(document.getElementById('root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders});
+        const SG = new SmartGrid(document.getElementById('root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true});
         const GRID = SG;
+        const MENU = new PatternMenu(document.getElementById('menu'));
+        MENU.onPatternSelected = pattern => setPreviewPattern(pattern);
+
         let stopAtLoop = false;
         let loopLength = 1;
 
         let interval = null;
         let isRunning = false;
+
+        // const PATTERNS = [
+        //     {name: 'test', points: [point(0, 0)]},
+        //     {name: 'twosies', points: [point(0, 0), point(1, 1)]},
+        //     {name: 'block', points: [point(0, 0), point(0, 1), point(1, 0), point(1, 1)]},
+        //     {name: 'blinker', points: [point(0, 0), point(0, 1), point(0, 2)]},
+        //     {name: 'flasher', points: [point(0, 0), point(0, 1), point(0, 2), point(1, 1), point(0, 6), point(0, 7), point(0, 8), point(1, 7)]},
+        //     {name: 'r-pentomino', points: [point(0, 1), point(0, 2), point(1, 0), point(1, 1), point(2, 1)]},
+        //     {name: 'glider', points: [{"x":0,"y":0},{"x":0,"y":1},{"x":0,"y":2},{"x":1,"y":0},{"x":2,"y":1}]},
+        //     {name: 'exploding pinwheel', points: [{"x":0,"y":6},{"x":1,"y":5},{"x":1,"y":7},{"x":2,"y":5},{"x":2,"y":7},{"x":3,"y":5},{"x":3,"y":6},{"x":5,"y":1},{"x":5,"y":2},{"x":5,"y":9},{"x":5,"y":10},{"x":5,"y":11},{"x":6,"y":0},{"x":6,"y":3},{"x":6,"y":9},{"x":6,"y":12},{"x":7,"y":1},{"x":7,"y":2},{"x":7,"y":3},{"x":7,"y":10},{"x":7,"y":11},{"x":9,"y":6},{"x":9,"y":7},{"x":10,"y":5},{"x":10,"y":7},{"x":11,"y":5},{"x":11,"y":7},{"x":12,"y":6}]},
+        // ];
 
         function playAction() {
             if (isRunning) {
@@ -183,7 +186,6 @@
         function stopAction() {
             clearInterval(interval);
             isRunning = false;
-            stopAtLoop = true;
         }
 
         // createGrid();
@@ -314,7 +316,10 @@
 
         function getPatternsAction() {
             apiGetAllPatterns()
-                .then(patterns => INPUT.setupMenu(patterns));
+                .then(patterns => {
+                    INPUT.setupMenu(patterns);
+                    patterns.forEach(({id}) => apiLoadPattern(id).then(pattern => MENU.addPattern(pattern)));
+                });
         }
 
         function savePatternAction() {
@@ -375,7 +380,6 @@
                 (x, y) => () => {
                     addPattern(points, x, y);
                     INPUT.patternId = null;
-                    resetCellEventHandlers();
                 }
             );
         }

@@ -10,17 +10,20 @@ class SmartGrid {
     settings = {
         size: {x: 150, y: 150},
         colors: {on: 'limegreen', off: 'lightgray'},
+        editable: false,
     }
 
     get size() {
         return this.settings.size;
     }
+    get colors() {
+        return this.settings.colors;
+    }
 
 
     constructor(root, settings, cells = []) {
-        const {size, colors, borders} = settings;
-        this.settings.size = size;
-        this.colors = colors;
+        const {size, borders} = settings;
+        this.settings = {...settings};
         this._game = new Game(size, borders);
         root.appendChild(this._createGrid(size));
         this.setBorders(borders);
@@ -104,9 +107,11 @@ class SmartGrid {
 
     _createCell(x, y) {
         const cell = createElement('span', 'cell');
-        cell.onclick = () => {this.toggleCell(x, y);};
-        cell.onmouseover = () => cell.style.opacity = 0.5;
-        cell.onmouseout = () => cell.style.opacity = 1.0;
+        if (this.settings.editable) {
+            cell.onclick = () => {this.toggleCell(x, y);};
+            cell.onmouseover = () => cell.style.opacity = 0.5;
+            cell.onmouseout = () => cell.style.opacity = 1.0;
+        }
         return cell;
     }
 
@@ -155,6 +160,19 @@ class SmartGrid {
     }
 
 
+
+    addPattern(pattern, dx = 0, dy = 0) {
+        this.previewPattern(pattern, dx, dy, false);
+        const result = [];
+        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
+            if (!this.hasCell(x, y)) {
+                result.push({ x, y });
+                this.addCell(x, y);
+            }
+        }
+        return result;
+    }
+
     translatePattern(pattern, dx = 0, dy = 0) {
         const points = pattern.map(p => ({
                 x: p.x + dx,
@@ -173,7 +191,7 @@ class SmartGrid {
     previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
         cell.style.opacity = on ? 0.8 : 1.0;
-        cell.style.backgroundColor = on ? this.colors.on : this.colors.off;
+        cell.style.backgroundColor = on ? this.colors.on : (this.hasCell(x, y) ? this.colors.on : this.colors.off);
     }
 
     onCellClick(clickHandler = (x, y) => () => { }) {
