@@ -6,6 +6,8 @@
     <title>Game of Life</title>
     <link rel="stylesheet" href="site.css" />
     <link rel="stylesheet" href="menu.css" />
+    <link rel="stylesheet" href="grid.css" />
+    <link rel="stylesheet" href="input.css" />
 </head>
 
 <body>
@@ -129,9 +131,9 @@
             <br>
             Population: <span id="pop-counter">0</span>
         </div>
-        <div id="root"></div>
-        <!-- <div id="grid">
-        </div> -->
+        <div id="grid-wrapper">
+            <div id="grid-root"></div>
+        </div>
     </div>
 
 
@@ -153,7 +155,7 @@
         // const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
 
-        const SG = new SmartGrid(document.getElementById('root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true});
+        const SG = new SmartGrid(document.getElementById('grid-root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true});
         const GRID = SG;
 
         let stopAtLoop = false;
