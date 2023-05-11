@@ -21,11 +21,11 @@ function _createTableHead() {
     return tHead;
 }
 
-const SETTINGS = {size: {x: 10, y: 10}, colors: {on: 'limegreen', off: 'lightgray'}, borders: true, editable: false}
+const SETTINGS = {colors: {on: 'limegreen', off: 'lightgray'}, borders: true, editable: false}
 
 class PatternMenu {
     _patterns = [];
-    _menu;
+    _menu = createElement('tbody', 'menu-body');
 
     selectedPattern = null;
     onPatternSelected = pattern => console.dir(pattern);
@@ -33,7 +33,6 @@ class PatternMenu {
     constructor(root, patterns=[]) {
         const table = createElement('table', 'menu-table');
         table.appendChild(_createTableHead());
-        this._menu = createElement('tbody', 'menu-body');
         table.appendChild(this._menu);
         patterns.forEach(pattern => this.addPattern(pattern));
         root.appendChild(table);
@@ -41,7 +40,9 @@ class PatternMenu {
 
     addPattern(pattern) {
         const row = createElement('tr', 'menu-item');
-        row.appendChild(createElement('td', 'pattern-name', pattern.name));
+        const nameCell = createElement('td', 'pattern-name', pattern.name);
+        nameCell.onclick = () => this.onPatternSelected(pattern);
+        row.appendChild(nameCell);
         const previewCell = this._createPreviewCell(pattern);
         row.appendChild(previewCell);
         row.appendChild(createElement('td', 'pattern-edit'));
@@ -54,7 +55,6 @@ class PatternMenu {
         previewCell.onclick = () => this.onPatternSelected(pattern);
         const grid = this._createPreviewGrid(previewCell, pattern)
         previewCell.style.height = `${grid.size.x * 10 + 50}px`;
-        previewCell.style.width = `${grid.size.y * 10 + 50}px`;
         this._patterns.push();
         return previewCell;
     }

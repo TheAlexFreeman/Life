@@ -41,7 +41,9 @@ tr.menu-item > td {
     padding-left: 20px;
 }
 
-.pattern-name-cell {
+td.pattern-name {
+    cursor: pointer;
+    text-decoration: underline;
     width: 200px;
 }
 
