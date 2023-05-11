@@ -50,17 +50,19 @@ class PatternMenu {
     }
 
     _createPreviewCell(pattern) {
-        const { points } = pattern;
         const previewCell = createElement('td', 'pattern-preview');
         previewCell.onclick = () => this.onPatternSelected(pattern);
-        const size = {
-            // TODO: Replace string keys w/ dot notation
-            x: Math.max(10, ...points.map(p => p['x'] + 3)),
-            y: Math.max(10, ...points.map(p => p['y'] + 3))
-        }
-        previewCell.style.height = `${size.x * 15}px`;
-        previewCell.style.width = `${size.y * 15}px`;
-        this._patterns.push(new SmartGrid(previewCell, {...SETTINGS, size}, points.map(p => ptAdd(p, point(1, 1)))));
+        const grid = this._createPreviewGrid(previewCell, pattern)
+        previewCell.style.height = `${grid.size.x * 10 + 50}px`;
+        previewCell.style.width = `${grid.size.y * 10 + 50}px`;
+        this._patterns.push();
         return previewCell;
+    }
+
+    _createPreviewGrid(root, pattern) {
+        const points = new Points(...pattern.points);
+        const padding = {x: 2, y: 2};
+        const size = ptAdd(points.boundingBox, ptAdd(padding, padding));
+        return new SmartGrid(root, {...SETTINGS, size}, points.translateToList(padding.x, padding.y))
     }
 }

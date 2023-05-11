@@ -228,6 +228,12 @@ class Points {
         this.forEach(p => result.add(ptAdd(p, {x, y})));
         return result;
     }
+
+    translateToList(x, y) {
+        const result = [];
+        this.forEach(p => result.push(ptAdd(p, {x, y})));
+        return result;
+    }
 }
 
 // Positional Calculations
@@ -249,8 +255,4 @@ const NEIGHBORS = [NW, N, NE, W, E, SW, S, SE];
 
 function neighbors(p = ORIGIN) {
     return NEIGHBORS.map(f => f(p));
-}
-
-function neighborSet(p = ORIGIN) {
-    return new Points(p, ...neighbors(p));
 }
