@@ -107,7 +107,7 @@ class Points {
                 }
             }
         }
-        return { x, y };
+        return result;
     }
 
     get min() {
@@ -232,6 +232,36 @@ class Points {
     translateToList(x, y) {
         const result = [];
         this.forEach(p => result.push(ptAdd(p, {x, y})));
+        return result;
+    }
+
+    _rotationFunction(clockwise = true) {
+        const max = this.max;
+        if (clockwise) {
+            return ({x, y}) => point(y, max.x - x);
+        }
+        return ({x, y}) => point(max.y - y, x);
+    }
+
+    rotate(clockwise = true) {
+        const result = new Points();
+        const rotate = this._rotationFunction(clockwise);
+        this.forEach(p => result.add(rotate(p)));
+        return result;
+    }
+
+    _flipFunction(horizontal=true) {
+        const max = this.max;
+        if (horizontal) {
+            return ({x, y}) => point(x, max.y - y);
+        }
+        return ({x, y}) => point(max.x - x, y);
+    }
+
+    flip(horizontal = true) {
+        const result = new Points();
+        const flip = this._flipFunction(horizontal);
+        this.forEach(p => result.add(flip(p)));
         return result;
     }
 }
