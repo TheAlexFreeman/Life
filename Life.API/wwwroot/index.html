@@ -132,7 +132,7 @@
             Population: <span id="pop-counter">0</span>
         </div>
         <div id="grid-wrapper">
-            <div id="grid-root"></div>
+            <div id="grid-frame"></div>
         </div>
     </div>
 
@@ -152,11 +152,9 @@
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
-        // const GRID = new Grid(document.getElementById('grid'), INPUT.size, INPUT.colors);
         const MEMORY = [];
 
-        const SG = new SmartGrid(document.getElementById('grid-root'), {size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true});
-        const GRID = SG;
+        const GAME = new Game({size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true}, document.getElementById('grid-frame'));
 
         let stopAtLoop = false;
         let loopLength = 1;
@@ -164,19 +162,9 @@
         let interval = null;
         let isRunning = false;
 
-        // const PATTERNS = [
-        //     {name: 'test', points: [point(0, 0)]},
-        //     {name: 'twosies', points: [point(0, 0), point(1, 1)]},
-        //     {name: 'block', points: [point(0, 0), point(0, 1), point(1, 0), point(1, 1)]},
-        //     {name: 'blinker', points: [point(0, 0), point(0, 1), point(0, 2)]},
-        //     {name: 'flasher', points: [point(0, 0), point(0, 1), point(0, 2), point(1, 1), point(0, 6), point(0, 7), point(0, 8), point(1, 7)]},
-        //     {name: 'r-pentomino', points: [point(0, 1), point(0, 2), point(1, 0), point(1, 1), point(2, 1)]},
-        //     {name: 'glider', points: [{"x":0,"y":0},{"x":0,"y":1},{"x":0,"y":2},{"x":1,"y":0},{"x":2,"y":1}]},
-        //     {name: 'exploding pinwheel', points: [{"x":0,"y":6},{"x":1,"y":5},{"x":1,"y":7},{"x":2,"y":5},{"x":2,"y":7},{"x":3,"y":5},{"x":3,"y":6},{"x":5,"y":1},{"x":5,"y":2},{"x":5,"y":9},{"x":5,"y":10},{"x":5,"y":11},{"x":6,"y":0},{"x":6,"y":3},{"x":6,"y":9},{"x":6,"y":12},{"x":7,"y":1},{"x":7,"y":2},{"x":7,"y":3},{"x":7,"y":10},{"x":7,"y":11},{"x":9,"y":6},{"x":9,"y":7},{"x":10,"y":5},{"x":10,"y":7},{"x":11,"y":5},{"x":11,"y":7},{"x":12,"y":6}]},
-        // ];
-
         const MENU = new PatternMenu(document.getElementById('menu-root'));
         MENU.onPatternSelected = pattern => setPreviewPattern(pattern);
+
         function playAction() {
             if (isRunning) {
                 clearInterval(interval);
@@ -225,59 +213,59 @@
             }
         };
 
-        function detectLoop(changes) {
-            let hasLoop = false;
-            if (!changes.size) {
-                hasLoop = true;
-                loopLength = 1;
-            } else {
-                const pastChanges = [];
-                for (let i = 1; i <= MEMORY.length; i++) {
-                    const m = MEMORY[MEMORY.length - i]
-                    if (pastChanges instanceof Array) break;
-                    pastChanges.push(m);
-                    if (changes.equals(m)) {
-                        const generation = INPUT.generationCount - i;
-                        hasLoop = true;
-                        loopLength = i;
-                        // TODO: Go back `i` generations to verify that the past state is equal to the current state
-                        break;
-                    }
-                }
-            }
-            if (hasLoop) {
-                const stop = confirm(`Loop detected (length ${loopLength}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
-                if (stop) {
-                    stopAction();
-                } else {
-                    stopAtLoop = false;
-                }
-            }
-        }
+        // function detectLoop(changes) {
+        //     let hasLoop = false;
+        //     if (!changes.size) {
+        //         hasLoop = true;
+        //         loopLength = 1;
+        //     } else {
+        //         const pastChanges = [];
+        //         for (let i = 1; i <= MEMORY.length; i++) {
+        //             const m = MEMORY[MEMORY.length - i]
+        //             if (pastChanges instanceof Array) break;
+        //             pastChanges.push(m);
+        //             if (changes.equals(m)) {
+        //                 const generation = INPUT.generationCount - i;
+        //                 hasLoop = true;
+        //                 loopLength = i;
+        //                 // TODO: Go back `i` generations to verify that the past state is equal to the current state
+        //                 break;
+        //             }
+        //         }
+        //     }
+        //     if (hasLoop) {
+        //         const stop = confirm(`Loop detected (length ${loopLength}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
+        //         if (stop) {
+        //             stopAction();
+        //         } else {
+        //             stopAtLoop = false;
+        //         }
+        //     }
+        // }
 
         // User Actions
 
         function tickAction() {
-            const changes = GRID.tick();
+            const changes = GAME.tick();
             // if (isRunning && stopAtLoop) {
             //     detectLoop(changes);
             // }
             MEMORY.push(changes);
             INPUT.generationCount += 1;
-            INPUT.populationCount = GRID.population;
+            INPUT.populationCount = GAME.population;
         }
 
         function backAction() {
             const changes = MEMORY.pop();
             if (changes instanceof Points) {
                 // Natural generation
-                changes.forEach(({x, y}) => GRID.toggleCell(x, y));
+                changes.forEach(p => GAME.toggleCell(p));
                 INPUT.generationCount -= 1;
             } else if (changes instanceof Array) {
                 // Edits since last tick
-                changes.forEach(({x, y}) => GRID.toggleCell(x, y));
+                changes.forEach(p => GAME.toggleCell(p));
             }
-            INPUT.populationCount = GRID.population;
+            INPUT.populationCount = GAME.population;
         }
 
         function editGenerationAction() {
@@ -293,7 +281,7 @@
         }
 
         function clearBoardAction() {
-            GRID.clear();
+            GAME.clear();
             // TODO: Do this more efficiently
             while(MEMORY.length) { MEMORY.pop() }
             INPUT.populationCount = 0;
@@ -301,20 +289,20 @@
         }
 
         function updateSizeAction() {
-            GRID.setSize(INPUT.size);
-            createGrid(GRID.normalizedPattern);
+            GAME.setSize(INPUT.size);
+            createGrid(GAME.normalizedPattern);
         }
 
         function updateBordersAction() {
-            GRID.setBorders(INPUT.borders);
+            GAME.setBorders(INPUT.borders);
         }
 
         function updateCellColorAction() {
-            GRID.setCellColor(INPUT.cellColor);
+            GAME.setCellColor(INPUT.cellColor);
         }
 
         function updateBackgroundColorAction() {
-            GRID.setBackgroundColor(INPUT.backgroundColor);
+            GAME.setBackgroundColor(INPUT.backgroundColor);
         }
 
         function getPatternsAction() {
@@ -326,7 +314,7 @@
         }
 
         function savePatternAction() {
-            const { name, creator, points } = INPUT.validatePattern(GRID);
+            const { name, creator, points } = INPUT.validatePattern(GAME);
             apiSavePattern(name, creator, points)
                 .then(pattern => INPUT.addMenuOption(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
@@ -342,53 +330,54 @@
             }
         }
 
-        // Creation of DOM elements
-
 
         // Click/hover handler functions
 
-        function toggleCell(x, y) {
-            GRID.toggleCell(x, y);
-            INPUT.populationCount += GRID.hasCell(x, y) ? 1 : -1;
-            addEdit([{ x, y }]);
+        function toggleCell(p) {
+            GAME.toggleCell(p);
+            INPUT.populationCount += GAME.hasCell(p) ? 1 : -1;
+            addEdit(p);
         }
 
-        function addEdit(points) {
+        function addEdit(...points) {
             if (MEMORY.length) {
-                if (!(MEMORY[MEMORY.length - 1] instanceof Array)) {
-                    MEMORY.push([]);
+                let lastEdit = MEMORY[MEMORY.length - 1];
+                if (lastEdit instanceof Array) {
+                    lastEdit.push(...points);
+                } else {
+                    MEMORY.push(points);
                 }
-                MEMORY[MEMORY.length - 1].push(...points);
             }
         }
 
         function resetCellEventHandlers() {
-            GRID.resetHover();
-            GRID.onCellClick((x, y) => () => {
-                toggleCell(x, y);
+            GAME._grid.resetHover();
+            GAME._grid.onCellClick((x, y) => () => {
+                toggleCell({x, y});
             });
         }
 
         function setPreviewPattern(pattern) {
             const { points } = pattern;
-            GRID.onCellHover(
+            GAME.onCellHover(
                 (x, y) => () => {
-                    GRID.previewPattern(points, x, y, true);
+                    GAME.previewPattern(points, x, y, true);
                 },
                 (x, y) => () => {
-                    GRID.previewPattern(points, x, y, false);
+                    GAME.previewPattern(points, x, y, false);
                 }
             );
-            GRID.onCellClick(
-                (x, y) => () => {
+            GAME.onCellClick(
+                (x, y) => (event) => {
                     addPattern(points, x, y);
                     INPUT.patternId = null;
+                    console.dir(event);
                 }
             );
         }
 
         function addPattern(pattern, x, y) {
-            const newCells = GRID.addPattern(pattern, x, y);
+            const newCells = GAME.addPattern(pattern, x, y);
             addEdit(newCells);
             INPUT.populationCount += newCells.length;
         }

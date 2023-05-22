@@ -4,12 +4,13 @@ function createElement(tagName, className) {
     return result;
 }
 
-class SmartGrid {
-    _game;
+class Grid {
     _grid = [];
+    root;
     settings = {
         size: {x: 150, y: 150},
         colors: {on: 'limegreen', off: 'lightgray'},
+        borders: false,
         editable: false,
     }
 
@@ -20,30 +21,17 @@ class SmartGrid {
         return this.settings.colors;
     }
 
-
-    constructor(root, settings, cells = []) {
+    constructor(frame, settings, cells = []) {
         const {size, borders} = settings;
         this.settings = {...settings};
-        this._game = new Game(size, borders);
-        root.appendChild(this._createGrid(size));
+        this.root = this._createGrid(size);
+        frame.appendChild(this.root);
         this.setBorders(borders);
         cells.forEach(({x, y}) => this.addCell(x, y));
     }
 
-    get population() {
-        return this._game.population;
-    }
-
-    get pattern() {
-        return this._game.liveCells;
-    }
-
-    get normalizedPattern() {
-        return this._game.normalizedCells;
-    }
-
     hasCell(x = 0, y = 0) {
-        return this._game.hasCell({ x, y });
+        return this.getColor(x, y) !== this.colors.off;
     }
 
     getColor(x = 0, y = 0) {
@@ -53,12 +41,14 @@ class SmartGrid {
         this._grid[x][y].style.backgroundColor = color;
     }
 
+    setColors(colors = {on: 'limegreen', off: 'lightgray'}) {
+        this._mapXY(({x, y}) => this.setColor(x, y, this.hasCell(x, y) ? colors.on : colors.off));
+    }
+
     addCell(x, y, color='limegreen') {
-        this._game.addCell({x, y});
         this.setColor(x, y, color);
     }
     removeCell(x, y) {
-        this._game.removeCell({x, y});
         this.setColor(x, y, this.colors.off);
     }
 
@@ -70,31 +60,37 @@ class SmartGrid {
         }
     }
 
-    tick() {
-        const changes = this._game.cellsToChange;
-        changes.forEach(({x, y}) => this.toggleCell(x, y));
-        return changes;
-    }
-
-
-    _includesX(x) {
-        return x >= 0 && x < this.size.x;
-    }
-
-    _includesY(y) {
-        return y >= 0 && y < this.size.y;
-    }
-
-    includes(point) {
-        return this.includesX(point.x) && this.includesY(point.y);
-    }
-
-    mod(point) {
-        return {
-            x: point.x % this.size.x,
-            y: point.y % this.size.y,
+    remove() {
+        if (this.root) {
+            this.root.remove();
         }
     }
+
+    // tick() {
+    //     const changes = this._game.cellsToChange;
+    //     changes.forEach(({x, y}) => this.toggleCell(x, y));
+    //     return changes;
+    // }
+
+
+    // _includesX(x) {
+    //     return x >= 0 && x < this.size.x;
+    // }
+
+    // _includesY(y) {
+    //     return y >= 0 && y < this.size.y;
+    // }
+
+    // includes(point) {
+    //     return this.includesX(point.x) && this.includesY(point.y);
+    // }
+
+    // mod(point) {
+    //     return {
+    //         x: point.x % this.size.x,
+    //         y: point.y % this.size.y,
+    //     }
+    // }
 
 
     _mapXY(func = (x, y) => { }) {
@@ -107,11 +103,12 @@ class SmartGrid {
 
     _createCell(x, y) {
         const cell = createElement('span', 'cell');
-        if (this.settings.editable) {
-            cell.onclick = () => {this.toggleCell(x, y);};
-            cell.onmouseover = () => cell.style.opacity = 0.5;
-            cell.onmouseout = () => cell.style.opacity = 1.0;
-        }
+        cell.style.backgroundColor = this.colors.off;
+        // if (this.settings.editable) {
+        //     cell.onclick = () => {this.toggleCell(x, y);};
+        //     cell.onmouseover = () => cell.style.opacity = 0.5;
+        //     cell.onmouseout = () => cell.style.opacity = 1.0;
+        // }
         return cell;
     }
 
@@ -135,8 +132,23 @@ class SmartGrid {
         return gridElement;
     }
 
+    // _addRow() {
+    //     const {x, y} = size;
+    //     const newRow = this._createRow(x, y);
+    //     this.root.appendChild(newRow);
+    // }
+
+    // _addColumn() {
+    //     const { y } = this.size;
+    //     const rowElements = this.root.children();
+    //     for (let x = 0; x < this.size.x; x++) {
+    //         const cell = this._createCell(x, y)
+    //         this._grid.push(cell);
+    //         rowElements[x].appendChild(cell);
+    //     }
+    // }
+
     setBorders(value = false) {
-        this._game.setBorders(value);
         const borderStyle = value ? "1px solid black" : "1px dashed gray";
         this._setBordersTopBottom(borderStyle);
         this._setBordersLeftRight(borderStyle);
@@ -179,6 +191,7 @@ class SmartGrid {
                 y: p.y + dy
             })
         );
+        // TODO: How does this relate to the `Game.neighbors` method?
         return this.hasBorders ? points.filter(p => this.includes(p)) : points.map(p => this.mod(p));
     }
 
@@ -217,7 +230,7 @@ class SmartGrid {
     }
 }
 
-class Grid {
+class X {
     colors = { on: 'limegreen', off: 'lightgray' };
     root;
     size;
