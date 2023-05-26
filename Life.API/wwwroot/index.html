@@ -155,6 +155,8 @@
         const MEMORY = [];
 
         const GAME = new Game({size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true}, document.getElementById('grid-frame'));
+        // TODO: Make event handlers direct parameters of `GAME`
+        resetCellEventHandlers();
 
         let stopAtLoop = false;
         let loopLength = 1;
@@ -289,19 +291,23 @@
         }
 
         function updateSizeAction() {
-            GAME.setSize(INPUT.size);
-            createGrid(GAME.normalizedPattern);
+            // FIXME
+            GAME.size = INPUT.size;
+            resetCellEventHandlers();
         }
 
         function updateBordersAction() {
-            GAME.setBorders(INPUT.borders);
+            // FIXME
+            GAME.borders = INPUT.borders;
         }
 
         function updateCellColorAction() {
+            // FIXME
             GAME.setCellColor(INPUT.cellColor);
         }
 
         function updateBackgroundColorAction() {
+            // FIXME
             GAME.setBackgroundColor(INPUT.backgroundColor);
         }
 
