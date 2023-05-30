@@ -302,13 +302,15 @@
         }
 
         function updateCellColorAction() {
-            // FIXME
-            GAME.setCellColor(INPUT.cellColor);
+            const color = INPUT.cellColor;
+            GAME.setCellColor(color);
+            MENU.updateCellColor(color);
         }
 
         function updateBackgroundColorAction() {
-            // FIXME
-            GAME.setBackgroundColor(INPUT.backgroundColor);
+            const color = INPUT.backgroundColor;
+            GAME.setBackgroundColor(color);
+            MENU.updateBackgroundColor(color);
         }
 
         function getPatternsAction() {
@@ -340,8 +342,8 @@
         // Click/hover handler functions
 
         function toggleCell(p) {
-            GAME.toggleCell(p);
-            INPUT.populationCount += GAME.hasCell(p) ? 1 : -1;
+            const add = GAME.toggleCell(p);
+            INPUT.populationCount += add ? 1 : -1;
             addEdit(p);
         }
 

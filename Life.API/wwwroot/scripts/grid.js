@@ -22,17 +22,15 @@ class Grid {
     }
 
     constructor(frame, settings, cells = []) {
-        const {size, borders} = settings;
+        const {size, borders, colors} = settings;
         this.settings = {...settings};
         this.root = this._createGrid(size);
         frame.appendChild(this.root);
         this.setBorders(borders);
-        cells.forEach(({x, y}) => this.addCell(x, y));
+        cells.forEach(({x, y}) => this.addCell(x, y, colors.on));
     }
 
-    hasCell(x = 0, y = 0) {
-        return this.getColor(x, y) !== this.colors.off;
-    }
+    hasCell = (x = 0, y = 0) => this.getColor(x, y) !== this.colors.off;
 
     getColor(x = 0, y = 0) {
         return this._grid[x][y].style.backgroundColor;
@@ -99,6 +97,10 @@ class Grid {
                 func(x, y);
             }
         }
+    }
+
+    _mapGrid(func = (cell) => { }) {
+        this._mapXY((x, y) => func(this._grid[x][y]));
     }
 
     _createCell(x, y) {
@@ -173,10 +175,10 @@ class Grid {
 
 
 
-    addPattern(pattern, dx = 0, dy = 0) {
-        this.previewPattern(pattern, dx, dy, false);
+    addPattern(pattern) {
+        this.previewPattern(pattern, false);
         const result = [];
-        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
+        for (let { x, y } of pattern) {
             if (!this.hasCell(x, y)) {
                 result.push({ x, y });
                 this.addCell(x, y);
@@ -185,23 +187,13 @@ class Grid {
         return result;
     }
 
-    translatePattern(pattern, dx = 0, dy = 0) {
-        const points = pattern.map(p => ({
-                x: p.x + dx,
-                y: p.y + dy
-            })
-        );
-        // TODO: How does this relate to the `Game.neighbors` method?
-        return this.hasBorders ? points.filter(p => this.includes(p)) : points.map(p => this.mod(p));
-    }
-
-    previewPattern(pattern, dx = 0, dy = 0, on = true) {
-        for (let { x, y } of this.translatePattern(pattern, dx, dy)) {
-            this.previewCell(x, y, on);
+    previewPattern(pattern, on = true) {
+        for (let { x, y } of pattern) {
+            this._previewCell(x, y, on);
         }
     }
 
-    previewCell(x, y, on = true) {
+    _previewCell(x, y, on = true) {
         const cell = this._grid[x][y];
         cell.style.opacity = on ? 0.8 : 1.0;
         cell.style.backgroundColor = on ? this.colors.on : (this.hasCell(x, y) ? this.colors.on : this.colors.off);

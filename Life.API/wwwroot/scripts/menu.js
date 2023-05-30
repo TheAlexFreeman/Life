@@ -38,6 +38,13 @@ class PatternMenu {
         root.appendChild(table);
     }
 
+    updateCellColor(color = 'limegreen') {
+        this._patterns.forEach(game => game.setCellColor(color));
+    }
+    updateBackgroundColor(color = 'lightgray') {
+        this._patterns.forEach(game => game.setBackgroundColor(color));
+    }
+
     addPattern(pattern) {
         const row = createElement('tr', 'menu-item');
         const nameCell = createElement('td', 'pattern-name', pattern.name);
@@ -53,16 +60,17 @@ class PatternMenu {
     _createPreviewCell(pattern) {
         const previewCell = createElement('td', 'pattern-preview');
         previewCell.onclick = () => this.onPatternSelected(pattern);
-        const grid = this._createPreviewGrid(previewCell, pattern)
+        const grid = this._createPreviewGrid(previewCell, pattern);
+        // TODO: Set `previewCell` dimensions in less janky way
         previewCell.style.height = `${grid.size.x * 10 + 50}px`;
-        this._patterns.push();
+        this._patterns.push(grid);
         return previewCell;
     }
 
-    _createPreviewGrid(root, pattern) {
+    _createPreviewGrid(frame, pattern) {
         const points = new Points(...pattern.points);
         const padding = {x: 2, y: 2};
         const size = ptAdd(points.boundingBox, ptAdd(padding, padding));
-        return new SmartGrid(root, {...SETTINGS, size}, points.translateToList(padding.x, padding.y))
+        return new Game({...SETTINGS, size}, frame, points.translateToList(padding.x, padding.y))
     }
 }
