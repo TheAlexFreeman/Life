@@ -102,10 +102,6 @@
             <br />
 
             <div id="grid-library">
-                <label for="pattern-name">
-                    Pattern Name:
-                    <input id="pattern-name" type="text" />
-                </label>
                 <button onclick="savePatternAction()">Save Current Board</button>
                 <label for="pattern-menu">
                     Saved Patterns:
@@ -141,6 +137,17 @@
     <h1 id="menu-header">Select a Pattern</h1>
     <div id="menu-wrapper">
         <div id="menu-root"></div>
+    </div>
+    <div id="pattern-canvas-wrapper">
+        <button>Create New Pattern</button>
+        <div id="pattern-canvas">
+            <label for="pattern-name">
+                Pattern Name:
+                <input id="pattern-name" type="text" />
+            </label>
+            <div id="canvas-grid-frame"></div>
+            <button>Save Pattern</button>
+        </div>
     </div>
 
     <script src="scripts/points.js" asp-append-version="true"></script>
