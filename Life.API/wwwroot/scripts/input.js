@@ -1,6 +1,5 @@
 class InputHandler {
     speedSlider = document.getElementById('speed-slider');
-    menuSelect = document.getElementById('pattern-menu');
     sizeInputs = {
         width: document.getElementById('width'),
         height: document.getElementById('height')
@@ -84,10 +83,6 @@ class InputHandler {
         // return this.creatorNameInput.value;
     }
 
-    get patternId() {
-        return this.menuSelect.value;
-    }
-
     showGenerationInput() {
         this.generationInput.value = this.generationCount;
         this.generationCounter.hidden = true;
@@ -108,22 +103,4 @@ class InputHandler {
         return { name, creator, points: grid.normalizedPattern };
     }
 
-    setupMenu(patterns = []) {
-        this.menuSelect.innerHTML = '';
-        this.menuSelect.appendChild(menuOption(null, '--Select a pattern--'));
-        for (let pattern of patterns) {
-            this.addMenuOption(pattern);
-        }
-    }
-
-    addMenuOption(pattern) {
-        this.menuSelect.appendChild(menuOption(pattern.id, pattern.name));
-    }
-}
-
-function menuOption(patternId, patternName) {
-    const option = document.createElement('option');
-    option.value = patternId;
-    option.textContent = patternName;
-    return option;
 }

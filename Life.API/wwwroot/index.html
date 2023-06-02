@@ -152,36 +152,16 @@
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
+        // TODO: Make memory internal to game
         const MEMORY = [];
 
         const GAME = new Game({size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true}, document.getElementById('grid-frame'));
         // TODO: Make event handlers direct parameters of `GAME`
         resetCellEventHandlers();
 
-        let stopAtLoop = false;
-        let loopLength = 1;
-
-        let interval = null;
-        let isRunning = false;
-
         const MENU = new PatternMenu(document.getElementById('menu-root'));
         MENU.onPatternSelected = pattern => setPreviewPattern(pattern);
 
-        function playAction() {
-            if (isRunning) {
-                clearInterval(interval);
-            } else {
-                isRunning = true;
-            }
-            interval = setInterval(() => tickAction(), INPUT.tickDelay);
-        }
-
-        function stopAction() {
-            clearInterval(interval);
-            isRunning = false;
-        }
-
-        // createGrid();
         getPatternsAction();
 
         window.onkeydown = function (event) {
@@ -215,6 +195,9 @@
             }
         };
 
+        // let stopAtLoop = false;
+        // let loopLength = 1;
+
         // function detectLoop(changes) {
         //     let hasLoop = false;
         //     if (!changes.size) {
@@ -246,6 +229,23 @@
         // }
 
         // User Actions
+
+        let playInterval = null;
+        let isRunning = false;
+
+        function playAction() {
+            if (isRunning) {
+                clearInterval(playInterval);
+            } else {
+                isRunning = true;
+            }
+            playInterval = setInterval(() => tickAction(), INPUT.tickDelay);
+        }
+
+        function stopAction() {
+            clearInterval(playInterval);
+            isRunning = false;
+        }
 
         function tickAction() {
             const changes = GAME.tick();
@@ -316,7 +316,6 @@
         function getPatternsAction() {
             apiGetAllPatterns()
                 .then(patterns => {
-                    INPUT.setupMenu(patterns);
                     patterns.forEach((pattern) => MENU.addPattern(pattern));
                 });
         }
@@ -324,22 +323,31 @@
         function savePatternAction() {
             const { name, creator, points } = INPUT.validatePattern(GAME);
             apiSavePattern(name, creator, points)
-                .then(pattern => INPUT.addMenuOption(pattern))
+                .then(pattern => MENU.addPattern(pattern))
                 .catch(error => console.error(`Unable to save pattern ${name}. `, error));
         }
 
-        function loadPatternAction() {
-            if (INPUT.patternId) {
-                apiLoadPattern(INPUT.patternId)
-                    .then(pattern => setPreviewPattern(pattern))
-                    .catch(error => console.error(`Unable to load pattern ${id}. `, error));
-            } else {
-                resetCellEventHandlers();
-            }
+        // Click/hover handler functions
+
+        function setPreviewPattern(pattern) {
+            const { points } = pattern;
+            const handlers = previewPatternHandlers(points);
+            GAME.setCellEventHandlers(handlers);
         }
 
+        function addPattern(pattern, x, y) {
+            const newCells = GAME.addPattern(pattern, x, y);
+            addEdit(newCells);
+            INPUT.populationCount += newCells.length;
+        }
 
-        // Click/hover handler functions
+        function resetCellEventHandlers() {
+            GAME.setCellEventHandlers({
+                onClick: (x, y) => () => {
+                    toggleCell({ x, y });
+                },
+            });
+        }
 
         function toggleCell(p) {
             const add = GAME.toggleCell(p);
@@ -358,38 +366,22 @@
             }
         }
 
-        function resetCellEventHandlers() {
-            GAME._grid.resetHover();
-            GAME._grid.onCellClick((x, y) => () => {
-                toggleCell({x, y});
-            });
-        }
-
-        function setPreviewPattern(pattern) {
-            const { points } = pattern;
-            GAME.onCellHover(
-                (x, y) => () => {
+        function previewPatternHandlers(points) {
+            return {
+                onClick: (x, y) => (event) => {
+                    addPattern(points, x, y);
+                    if (!event.shiftKey) {
+                        resetCellEventHandlers();
+                    }
+                },
+                onMouseOver: (x, y) => () => {
                     GAME.previewPattern(points, x, y, true);
                 },
-                (x, y) => () => {
+                onMouseOut: (x, y) => () => {
                     GAME.previewPattern(points, x, y, false);
                 }
-            );
-            GAME.onCellClick(
-                (x, y) => (event) => {
-                    addPattern(points, x, y);
-                    INPUT.patternId = null;
-                    console.dir(event);
-                }
-            );
+            }
         }
-
-        function addPattern(pattern, x, y) {
-            const newCells = GAME.addPattern(pattern, x, y);
-            addEdit(newCells);
-            INPUT.populationCount += newCells.length;
-        }
-
 
     </script>
 </body>
