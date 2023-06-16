@@ -125,7 +125,7 @@ class Points {
         return result;
     }
 
-    get boundingBox() {
+    get minMax() {
         const max = { x: 0, y: 0 }
         const min = { x: Infinity, y: Infinity }
         for (let [x, ys] of this._map) {
@@ -138,6 +138,11 @@ class Points {
                 if (y < min.y) { min.y = y; }
             }
         }
+        return { min, max };
+    }
+
+    get boundingBox() {
+        const { min, max } = this.minMax;
         return {
             x: max.x - min.x + 1,
             y: max.y - min.y + 1
@@ -145,7 +150,14 @@ class Points {
     }
 
     get atOrigin() {
-        return this.map(p => ptSub(p, this.min));
+        const min = this.min;
+        const result = new Points();
+        for (let [x, ys] of this._map) {
+            if (ys.size) {
+                result._map.set(x - min.x, new Set([...ys].map(y => y - min.y)));
+            }
+        }
+        return result;
     }
 
     get neighbors() {
@@ -172,14 +184,24 @@ class Points {
         return this.inBox(ORIGIN, size);
     }
 
-
-    map(func = ({x, y}) => any) {
-        const result = [];
-        this.forEach(p => result.push(func(p)));
+    copy() {
+        const result = new Points();
+        for (let [x, ys] of this._map) {
+            if (ys.size) {
+                result._map.set(x, new Set(ys));
+            }
+        }
         return result;
     }
 
-    filter(pred = _ => true) {
+
+    map(func = ({x, y}) => any) {
+        const result = [];
+        this.forEach(({x, y}) => result.push(func({x, y})));
+        return result;
+    }
+
+    filter(pred = ({x, y}) => true) {
         const result = new Points();
         this.forEach(p => {
             if (pred(p)) {
@@ -189,7 +211,7 @@ class Points {
         return result;
     }
 
-    filterToList(pred = _ => true) {
+    filterToList(pred = ({x, y}) => true) {
         const result = [];
         this.forEach(p => {
             if (pred(p)) {
@@ -236,7 +258,8 @@ class Points {
     }
 
     _rotationFunction(clockwise = true) {
-        const max = this.max;
+        // TODO: Fix this so it can rotate figures in place
+        const { min, max } = this.minMax;
         if (clockwise) {
             return ({x, y}) => point(y, max.x - x);
         }

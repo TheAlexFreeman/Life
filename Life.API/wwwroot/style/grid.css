@@ -2,6 +2,10 @@
     position: relative;
 }
 
+.grid {
+    display: inline-block;
+}
+
 .row {
     height: 10px;
 }

@@ -96,7 +96,7 @@ class Game {
     }
 
     get normalizedCells() {
-        return this._liveCells.atOrigin;
+        return this._liveCells.atOrigin.list;
     }
 
     displayGrid(frame) {
@@ -171,6 +171,16 @@ class Game {
     _translatePattern(pattern, x = 0, y = 0) {
         const points = pattern.map(p => ptAdd(p, {x, y}));
         return this._crossBorders(points);
+    }
+
+    rotate(clockwise = true) {
+        const {x, y} = this.size;
+        const min = this._liveCells.min;
+        const newCells = this._liveCells.atOrigin.rotate(clockwise);
+        this.clear();
+        this.size = {x: y, y: x};
+        newCells.forEach(p => this.addCell(ptAdd(p, min)));
+
     }
 
     // Heart of the game. This method and those supporting it should be optimized for speed.

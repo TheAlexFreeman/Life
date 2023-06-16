@@ -59,11 +59,19 @@ class PatternMenu {
 
     _createPreviewCell(pattern) {
         const previewCell = createElement('td', 'pattern-preview');
-        previewCell.onclick = () => this.onPatternSelected(pattern);
-        const grid = this._createPreviewGrid(previewCell, pattern);
-        // TODO: Set `previewCell` dimensions in less janky way
-        previewCell.style.height = `${grid.size.x * 10 + 50}px`;
-        this._patterns.push(grid);
+        const rotateLeft = createElement('a', 'rotate-button');
+        rotateLeft.textContent = `↺`;
+        const rotateRight = createElement('a', 'rotate-button');
+        rotateRight.textContent = `↻`;
+        const previewFrame = createElement('div', 'preview-grid-frame');
+        previewCell.appendChild(rotateLeft);
+        previewCell.appendChild(previewFrame);
+        previewCell.appendChild(rotateRight);
+        const game = this._createPreviewGrid(previewFrame, pattern);
+        previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.normalizedCells});
+        rotateLeft.onclick = () => game.rotate(false);
+        rotateRight.onclick = () => game.rotate(true);
+        this._patterns.push(game);
         return previewCell;
     }
 
