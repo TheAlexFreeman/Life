@@ -273,17 +273,17 @@ class Points {
         return result;
     }
 
-    _flipFunction(horizontal=true) {
+    _flipFunction(vertical = true) {
         const max = this.max;
-        if (horizontal) {
-            return ({x, y}) => point(x, max.y - y);
+        if (vertical) {
+            return ({x, y}) => point(max.x - x, y);
         }
-        return ({x, y}) => point(max.x - x, y);
+        return ({x, y}) => point(x, max.y - y);
     }
 
-    flip(horizontal = true) {
+    flip(vertical = true) {
         const result = new Points();
-        const flip = this._flipFunction(horizontal);
+        const flip = this._flipFunction(vertical);
         this.forEach(p => result.add(flip(p)));
         return result;
     }

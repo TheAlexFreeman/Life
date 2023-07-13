@@ -159,41 +159,11 @@
         // TODO: Make event handlers direct parameters of `GAME`
         resetCellEventHandlers();
 
-        const MENU = new PatternMenu(document.getElementById('menu-root'));
+        const MENU = new PatternMenu(document.getElementById('menu-root'), [{name: 'r-pent', points: [point(0, 0), point(0, 1), point(1, 1), point(1, 2), point(2, 1)]}]);
         MENU.onPatternSelected = pattern => setPreviewPattern(pattern);
 
         getPatternsAction();
 
-        window.onkeydown = function (event) {
-            if (event.target === document.body) {
-                switch (event.keyCode) {
-                    case 27: // escape
-                        resetCellEventHandlers(); break;
-                    case 32: // space bar
-                        event.preventDefault();
-                        isRunning ? stopAction() : playAction();
-                        break;
-                    case 37: // left arrow
-                        backAction(); break;
-                    case 38: // up arrow
-                        if (isRunning) {
-                            event.preventDefault();
-                            INPUT.speedSlider.stepUp();
-                            playAction();
-                        }
-                        break;
-                    case 39: // right arrow
-                        tickAction(); break;
-                    case 40: // down arrow
-                        if (isRunning) {
-                            event.preventDefault();
-                            INPUT.speedSlider.stepDown();
-                            playAction();
-                        }
-                        break;
-                }
-            }
-        };
 
         // let stopAtLoop = false;
         // let loopLength = 1;
@@ -232,6 +202,41 @@
 
         let playInterval = null;
         let isRunning = false;
+
+
+        window.onkeydown = function (event) {
+            if (event.target === document.body) {
+                switch (event.keyCode) {
+                    case 27: // escape
+                        resetCellEventHandlers();
+                    break;
+                    case 32: // space bar
+                        event.preventDefault();
+                        isRunning ? stopAction() : playAction();
+                    break;
+                    case 37: // left arrow
+                        backAction();
+                    break;
+                    case 38: // up arrow
+                        if (isRunning) {
+                            event.preventDefault();
+                            INPUT.speedSlider.stepUp();
+                            playAction();
+                        }
+                    break;
+                    case 39: // right arrow
+                        tickAction(); break;
+                    case 40: // down arrow
+                        if (isRunning) {
+                            event.preventDefault();
+                            INPUT.speedSlider.stepDown();
+                            playAction();
+                        }
+                    break;
+                }
+            }
+        };
+
 
         function playAction() {
             if (isRunning) {

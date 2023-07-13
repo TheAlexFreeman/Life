@@ -183,6 +183,13 @@ class Game {
 
     }
 
+    flip(vertical = true) {
+        const min = this._liveCells.min;
+        const newCells = this._liveCells.atOrigin.flip(vertical);
+        this.clear();
+        newCells.forEach(p => this.addCell(ptAdd(p, min)));
+    }
+
     // Heart of the game. This method and those supporting it should be optimized for speed.
 
     tick() {

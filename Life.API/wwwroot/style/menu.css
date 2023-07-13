@@ -61,3 +61,10 @@ td.pattern-name {
 .rotate-button:hover {
     text-decoration: underline;
 }
+
+.flip-button {
+    cursor: pointer;
+    font-size: 30px;
+    font-weight: bold;
+    margin-left: 35px;
+}

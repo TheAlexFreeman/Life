@@ -47,9 +47,11 @@ class PatternMenu {
 
     addPattern(pattern) {
         const row = createElement('tr', 'menu-item');
+
         const nameCell = createElement('td', 'pattern-name', pattern.name);
         nameCell.onclick = () => this.onPatternSelected(pattern);
         row.appendChild(nameCell);
+
         const previewCell = this._createPreviewCell(pattern);
         row.appendChild(previewCell);
         row.appendChild(createElement('td', 'pattern-edit'));
@@ -59,18 +61,22 @@ class PatternMenu {
 
     _createPreviewCell(pattern) {
         const previewCell = createElement('td', 'pattern-preview');
-        const rotateLeft = createElement('a', 'rotate-button');
-        rotateLeft.textContent = `↺`;
-        const rotateRight = createElement('a', 'rotate-button');
-        rotateRight.textContent = `↻`;
+        const rotateLeft = createElement('a', 'rotate-button', `↺`);
+        rotateLeft.title = 'Rotate Left'
+        const rotateRight = createElement('a', 'rotate-button', `↻`);
         const previewFrame = createElement('div', 'preview-grid-frame');
-        previewCell.appendChild(rotateLeft);
-        previewCell.appendChild(previewFrame);
-        previewCell.appendChild(rotateRight);
+        const flipVertical = createElement('div', 'flip-button', '↕');
+        previewCell.append(flipVertical);
+        previewCell.append(rotateLeft, previewFrame, rotateRight);
+        const flipHorizontal = createElement('div', 'flip-button', '↔');
+        previewCell.append(flipHorizontal);
+
         const game = this._createPreviewGrid(previewFrame, pattern);
         previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.normalizedCells});
         rotateLeft.onclick = () => game.rotate(false);
         rotateRight.onclick = () => game.rotate(true);
+        flipVertical.onclick = () => game.flip(true);
+        flipHorizontal.onclick = () => game.flip(false);
         this._patterns.push(game);
         return previewCell;
     }
