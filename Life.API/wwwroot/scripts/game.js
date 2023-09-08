@@ -1,6 +1,7 @@
 class Game {
     _grid;
     _frame;
+    _memory = [];
     _liveCells = new Points();
     _relevantCells = new Points();
     _settings = {
@@ -8,6 +9,19 @@ class Game {
         colors: {on: 'limegreen', off: 'lightgray'},
         borders: false,
         editable: true,
+    }
+
+    get hasMemory() {
+        return !!this._memory.length;
+    }
+    get latestChanges() {
+        return this._memory[this._memory.length - 1];
+    }
+    popMemory() {
+        return this._memory.pop();
+    }
+    get generation() {
+        return this._memory.filter(changes => (changes instanceof Points)).length;
     }
 
     get size() {
@@ -134,6 +148,7 @@ class Game {
     clear() {
         this._liveCells.forEach(p => this.removeCell(p));
         this._relevantCells.clear();
+        this._memory = [];
     }
 
     setCellEventHandlers(handlers = { onClick: (x, y) => this.toggleCell({x, y}) }) {
@@ -168,6 +183,18 @@ class Game {
         return result;
     }
 
+    addEdit(...points) {
+        if (this._memory.length) {
+            const changes = this.latestChanges;
+            if (changes instanceof Array) {
+                // Last change was manual edit
+                changes.push(...points);
+            } else {
+                this._memory.push(points);
+            }
+        }
+    }
+
     _translatePattern(pattern, x = 0, y = 0) {
         const points = pattern.map(p => ptAdd(p, {x, y}));
         return this._crossBorders(points);
@@ -194,6 +221,13 @@ class Game {
 
     tick() {
         const changes = this.cellsToChange;
+        changes.forEach(p => this.toggleCell(p));
+        this._memory.push(changes);
+        return changes;
+    }
+
+    back() {
+        const changes = this.popMemory();
         changes.forEach(p => this.toggleCell(p));
         return changes;
     }

@@ -152,9 +152,6 @@
 
     <script type="text/javascript">
         const INPUT = new InputHandler();
-        // TODO: Make memory internal to game
-        const MEMORY = [];
-
         const GAME = new Game({size: INPUT.size, colors: INPUT.colors, borders: INPUT.borders, editable: true}, document.getElementById('grid-frame'));
         // TODO: Make event handlers direct parameters of `GAME`
         resetCellEventHandlers();
@@ -164,47 +161,14 @@
 
         getPatternsAction();
 
-
-        // let stopAtLoop = false;
-        // let loopLength = 1;
-
-        // function detectLoop(changes) {
-        //     let hasLoop = false;
-        //     if (!changes.size) {
-        //         hasLoop = true;
-        //         loopLength = 1;
-        //     } else {
-        //         const pastChanges = [];
-        //         for (let i = 1; i <= MEMORY.length; i++) {
-        //             const m = MEMORY[MEMORY.length - i]
-        //             if (pastChanges instanceof Array) break;
-        //             pastChanges.push(m);
-        //             if (changes.equals(m)) {
-        //                 const generation = INPUT.generationCount - i;
-        //                 hasLoop = true;
-        //                 loopLength = i;
-        //                 // TODO: Go back `i` generations to verify that the past state is equal to the current state
-        //                 break;
-        //             }
-        //         }
-        //     }
-        //     if (hasLoop) {
-        //         const stop = confirm(`Loop detected (length ${loopLength}).\nPress 'OK' to stop the game or 'Cancel' to keep it running.`);
-        //         if (stop) {
-        //             stopAction();
-        //         } else {
-        //             stopAtLoop = false;
-        //         }
-        //     }
-        // }
-
         // User Actions
 
         let playInterval = null;
         let isRunning = false;
 
-
+        // Keystroke handler
         window.onkeydown = function (event) {
+            // TODO: Better way to distinguish 'active' element of page
             if (event.target === document.body) {
                 switch (event.keyCode) {
                     case 27: // escape
@@ -254,16 +218,12 @@
 
         function tickAction() {
             const changes = GAME.tick();
-            // if (isRunning && stopAtLoop) {
-            //     detectLoop(changes);
-            // }
-            MEMORY.push(changes);
             INPUT.generationCount += 1;
             INPUT.populationCount = GAME.population;
         }
 
         function backAction() {
-            const changes = MEMORY.pop();
+            const changes = GAME.popMemory();
             if (changes instanceof Points) {
                 // Natural generation
                 changes.forEach(p => GAME.toggleCell(p));
@@ -289,8 +249,6 @@
 
         function clearBoardAction() {
             GAME.clear();
-            // TODO: Do this more efficiently
-            while(MEMORY.length) { MEMORY.pop() }
             INPUT.populationCount = 0;
             INPUT.generationCount = 0;
         }
@@ -342,7 +300,7 @@
 
         function addPattern(pattern, x, y) {
             const newCells = GAME.addPattern(pattern, x, y);
-            addEdit(newCells);
+            GAME.addEdit(...newCells);
             INPUT.populationCount += newCells.length;
         }
 
@@ -357,19 +315,9 @@
         function toggleCell(p) {
             const add = GAME.toggleCell(p);
             INPUT.populationCount += add ? 1 : -1;
-            addEdit(p);
+            GAME.addEdit(p);
         }
 
-        function addEdit(...points) {
-            if (MEMORY.length) {
-                let lastEdit = MEMORY[MEMORY.length - 1];
-                if (lastEdit instanceof Array) {
-                    lastEdit.push(...points);
-                } else {
-                    MEMORY.push(points);
-                }
-            }
-        }
 
         function previewPatternHandlers(points) {
             return {
@@ -387,6 +335,122 @@
                 }
             }
         }
+
+
+
+        function isPrime(n) {
+            const testPrimes = [7, 11, 13, 17, 19];
+            if (testPrimes.includes(n)) return true;
+            for (let base of testPrimes) {
+                const temp = Math.pow(base, n - 1) % n;
+                console.log(temp);
+                if (temp !== 1) return false;
+            }
+            return true;
+        }
+
+        const DOT = '.';
+        const OPEN = '(';
+        const CLOSE = ')';
+        const ALPHABET = [DOT, OPEN, CLOSE];
+
+        const HYPRIMES = ['.',]; // '(.)', '((.))', '(..)', '(((.)))', '((.).)', '((..))'];
+
+        function nthHyprime(n) {
+            // if (n === 1) return PRIMES[0];
+            if (HYPRIMES.length >= n) return HYPRIMES[n - 1];
+            return wrap(hyprime(n));
+        }
+
+        function hyprime(n) {
+            if (n < 2) return '';
+            // if (n % 2 === 0) return hyprime(n / 2) + nthHyprime(1);
+            while (n > 1) {
+
+            }
+
+        }
+
+        function parseHyprime(x) {
+            let result = 1;
+            const tokens = tokenize(x);
+            // tokenize into prime factors
+            for (let token of tokens) {
+                if (token === '.') {
+                    result *= 2;
+                } else {
+                    const index = parseHyprime(unwrap(token));
+                }
+            }
+        }
+
+        function wrap(x) {
+            return `${OPEN}${x}${CLOSE}`;
+        }
+        function unwrap(x) {
+            if (x.startsWith(OPEN) && x.endsWith(CLOSE)) {
+                return x.slice(1, x.length - 1);
+            }
+        }
+
+        function tokenize(x) {
+            const result = [];
+            let token = '';
+            function addToken(t) {
+                result.push(t);
+                token = '';
+            }
+            const stack = [];
+            for (let char of x) {
+                token += char;
+                switch (char) {
+                    case DOT:
+                        if (stack.length === 0) {
+                            addToken(token);
+                        }
+                        break;
+                    case OPEN:
+                        stack.push(char);
+                        break;
+                    case CLOSE:
+                        stack.pop();
+                        if (stack.length === 0) {
+                            addToken(token);
+                        }
+                        break;
+                    default: return null;
+                }
+            }
+            return result;
+        }
+
+        // function nthPrime(n) {
+        //     if (PRIMES.length >= n) return PRIMES[n - 1];
+        //     return `(${xenotation(n)})`;
+        // }
+
+        // function xenotation(n) {
+        //     if (n === 2) return nthPrime(1);
+        // }
+
+        function xenoToDecimal(x) {
+            if (x === '') return 1;
+            if (x.endsWith('.')) return 2 * xenoToDecimal(x.slice(0, x.length - 1));
+        }
+
+
+
+
+        // function xenoPrimes(n) {
+        //     // // N must be int
+        //     // n === Math.floor(n);
+        //     // if (n === 0) return [];
+        //     if (n === 1) return ['.'];
+        //     const primes = xenoPrimes(n - 1);
+        //     return [...primes, `(${primes[n-1]})`]
+        //     return [...xenoPrimes(n - 1)]
+        // }
+
 
     </script>
 </body>
