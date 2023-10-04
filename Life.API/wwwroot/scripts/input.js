@@ -17,6 +17,15 @@ class InputHandler {
 
     constructor() { }
 
+    keyCodes = {
+        ESCAPE: 27,
+        SPACE: 32,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+    }
+
     get tickDelay() {
         switch (this.speedSlider.valueAsNumber) {
             case 0: return 750;
@@ -46,6 +55,14 @@ class InputHandler {
     }
     set populationCount(value) {
         this.populationCounter.textContent = value;
+    }
+
+    get gameSettings() {
+        return {
+            size: this.size,
+            colors: this.colors,
+            borders: this.borders
+        }
     }
 
     get borders() {

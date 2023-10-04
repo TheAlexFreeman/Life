@@ -97,28 +97,7 @@ class Grid {
         const cell = createElement('span', 'cell');
         const { colors } = settings;
         cell.style.backgroundColor = isAlive ? colors.on : colors.off;
-        // if (editable) {
-        //     cell.onclick = () => {this.toggleCell(x, y);};
-        //     cell.onmouseover = () => cell.style.opacity = 0.5;
-        //     cell.onmouseout = () => cell.style.opacity = 1.0;
-        // }
         return cell;
     }
-
-    // _addRow() {
-    //     const {x, y} = size;
-    //     const newRow = this._createRow(x, y);
-    //     this.root.appendChild(newRow);
-    // }
-
-    // _addColumn() {
-    //     const { y } = this.size;
-    //     const rowElements = this.root.children();
-    //     for (let x = 0; x < this.size.x; x++) {
-    //         const cell = this._createCell(x, y)
-    //         this._grid.push(cell);
-    //         rowElements[x].appendChild(cell);
-    //     }
-    // }
 
 }

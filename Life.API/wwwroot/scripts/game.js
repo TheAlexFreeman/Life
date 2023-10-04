@@ -45,13 +45,11 @@ class Game {
     }
     setBackgroundColor(color = 'lightgray') {
         this._settings.colors.off = color;
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++) {
-                if (!this.hasCell({x, y})) {
-                    this._grid.setColor({x, y}, color);
-                }
+        this._mapXY((x, y) => {
+            if (!this.hasCell({x, y})) {
+                this._grid.setColor({x, y}, color);
             }
-        }
+        });
     }
 
     get borders() {
@@ -59,6 +57,7 @@ class Game {
     }
     set borders(value=false) {
         this._settings.borders = value;
+        // TODO: Clean this up
         this._crossBorders = value ?
             (points) => points.filter(p => this._includes(p)) :
             (points) => points.map(p => this._mod(p));
@@ -128,20 +127,20 @@ class Game {
         this._liveCells.add(p);
         this._relevantCells.addPoints(p, ...this._neighbors(p));
         this._grid.setColor(p, this.colors.on);
-        return true;
     }
 
     removeCell(p) {
         this._liveCells.remove(p);
         this._grid.setColor(p, this.colors.off);
-        return false;
     }
 
     toggleCell(p) {
         if (this.hasCell(p)) {
-            return this.removeCell(p);
+            this.removeCell(p);
+            return -1;
         } else {
-            return this.addCell(p);
+            this.addCell(p);
+            return 1;
         }
     }
 
@@ -172,15 +171,15 @@ class Game {
 
     addPattern(pattern, dx = 0, dy = 0) {
         const translatedPattern = this._translatePattern(pattern, dx, dy);
-        const result = [];
+        const newCells = [];
         for (let p of translatedPattern) {
             if (!this.hasCell(p)) {
                 this.addCell(p);
-                result.push(p);
+                newCells.push(p);
             }
             this._grid.setOpacity(p, 1.0);
         }
-        return result;
+        return newCells;
     }
 
     addEdit(...points) {
@@ -196,8 +195,9 @@ class Game {
     }
 
     _translatePattern(pattern, x = 0, y = 0) {
-        const points = pattern.map(p => ptAdd(p, {x, y}));
-        return this._crossBorders(points);
+        const translatePoint = p => ptAdd(p, {x, y});
+        const translatedPoints = pattern.map(translatePoint);
+        return this._crossBorders(translatedPoints);
     }
 
     rotate(clockwise = true) {
@@ -237,14 +237,24 @@ class Game {
     }
 
     _needsUpdate(point) {
-        const liveNeighborCount = this._liveNeighbors(point).length;
+        const liveNeighbors = this._liveNeighbors(point)
+        const liveNeighborCount = liveNeighbors.length;
         if (liveNeighborCount < 2) {
             this._relevantCells.remove(point);
         }
         // This is where the magic happens!
         // TODO: Account for colors in 2/4/multicolor modes
         if (this.hasCell(point)) return liveNeighborCount < 2 || liveNeighborCount > 3;
+        if (liveNeighborCount === 3) {
+            let colors = liveNeighbors.map(p => this._grid.getColor(p));
+            console.dir(colors);
+        }
         return liveNeighborCount === 3;
+    }
+
+    _nextColor(colors) {
+        // TODO: Allow for different kinds of 'inheritance' to determine cell color
+        return 'limegreen';
     }
 
     _liveNeighbors(point) {
@@ -255,6 +265,7 @@ class Game {
         return this._crossBorders(neighbors(point))
     }
 
+    // TODO: Deal with this in a less ad-hoc way?
     _crossBorders = ([...points]) => points.map(p => this._mod(p));
 
     _includes(point) {

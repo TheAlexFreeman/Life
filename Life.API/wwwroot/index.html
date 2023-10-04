@@ -166,40 +166,44 @@
         let playInterval = null;
         let isRunning = false;
 
+        // TODO: Implement modes!!!
+        let mode = 'DEFAULT';
+
         // Keystroke handler
-        window.onkeydown = function (event) {
+        window.onkeydown = function (keyboardEvent) {
             // TODO: Better way to distinguish 'active' element of page
-            if (event.target === document.body) {
-                switch (event.keyCode) {
-                    case 27: // escape
-                        resetCellEventHandlers();
-                    break;
-                    case 32: // space bar
-                        event.preventDefault();
-                        isRunning ? stopAction() : playAction();
-                    break;
-                    case 37: // left arrow
-                        backAction();
-                    break;
-                    case 38: // up arrow
-                        if (isRunning) {
-                            event.preventDefault();
-                            INPUT.speedSlider.stepUp();
-                            playAction();
-                        }
-                    break;
-                    case 39: // right arrow
-                        tickAction(); break;
-                    case 40: // down arrow
-                        if (isRunning) {
-                            event.preventDefault();
-                            INPUT.speedSlider.stepDown();
-                            playAction();
-                        }
-                    break;
-                }
+            if (keyboardEvent.target === document.body) {
+                const keystrokeHandler = KEYSTROKE_HANDLERS[mode][keyboardEvent.keyCode]
+                keystrokeHandler(keyboardEvent);
             }
         };
+
+        const { ESCAPE, SPACE, LEFT, UP, RIGHT, DOWN } = INPUT.keyCodes;
+        const KEYSTROKE_HANDLERS = {
+            DEFAULT: {
+                [ESCAPE]: event => resetCellEventHandlers(),
+                [SPACE]: event => {
+                    event.preventDefault();
+                    isRunning ? stopAction() : playAction();
+                },
+                [LEFT]: event => backAction(),
+                [UP]: event => {
+                    if (isRunning) {
+                        event.preventDefault();
+                        INPUT.speedSlider.stepUp();
+                        playAction();
+                    }
+                },
+                [RIGHT]: event => tickAction(),
+                [DOWN]: event => {
+                    if (isRunning) {
+                        event.preventDefault();
+                        INPUT.speedSlider.stepDown();
+                        playAction();
+                    }
+                },
+            },
+        }
 
 
         function playAction() {
@@ -313,8 +317,7 @@
         }
 
         function toggleCell(p) {
-            const add = GAME.toggleCell(p);
-            INPUT.populationCount += add ? 1 : -1;
+            INPUT.populationCount += GAME.toggleCell(p);
             GAME.addEdit(p);
         }
 
@@ -335,122 +338,6 @@
                 }
             }
         }
-
-
-
-        function isPrime(n) {
-            const testPrimes = [7, 11, 13, 17, 19];
-            if (testPrimes.includes(n)) return true;
-            for (let base of testPrimes) {
-                const temp = Math.pow(base, n - 1) % n;
-                console.log(temp);
-                if (temp !== 1) return false;
-            }
-            return true;
-        }
-
-        const DOT = '.';
-        const OPEN = '(';
-        const CLOSE = ')';
-        const ALPHABET = [DOT, OPEN, CLOSE];
-
-        const HYPRIMES = ['.',]; // '(.)', '((.))', '(..)', '(((.)))', '((.).)', '((..))'];
-
-        function nthHyprime(n) {
-            // if (n === 1) return PRIMES[0];
-            if (HYPRIMES.length >= n) return HYPRIMES[n - 1];
-            return wrap(hyprime(n));
-        }
-
-        function hyprime(n) {
-            if (n < 2) return '';
-            // if (n % 2 === 0) return hyprime(n / 2) + nthHyprime(1);
-            while (n > 1) {
-
-            }
-
-        }
-
-        function parseHyprime(x) {
-            let result = 1;
-            const tokens = tokenize(x);
-            // tokenize into prime factors
-            for (let token of tokens) {
-                if (token === '.') {
-                    result *= 2;
-                } else {
-                    const index = parseHyprime(unwrap(token));
-                }
-            }
-        }
-
-        function wrap(x) {
-            return `${OPEN}${x}${CLOSE}`;
-        }
-        function unwrap(x) {
-            if (x.startsWith(OPEN) && x.endsWith(CLOSE)) {
-                return x.slice(1, x.length - 1);
-            }
-        }
-
-        function tokenize(x) {
-            const result = [];
-            let token = '';
-            function addToken(t) {
-                result.push(t);
-                token = '';
-            }
-            const stack = [];
-            for (let char of x) {
-                token += char;
-                switch (char) {
-                    case DOT:
-                        if (stack.length === 0) {
-                            addToken(token);
-                        }
-                        break;
-                    case OPEN:
-                        stack.push(char);
-                        break;
-                    case CLOSE:
-                        stack.pop();
-                        if (stack.length === 0) {
-                            addToken(token);
-                        }
-                        break;
-                    default: return null;
-                }
-            }
-            return result;
-        }
-
-        // function nthPrime(n) {
-        //     if (PRIMES.length >= n) return PRIMES[n - 1];
-        //     return `(${xenotation(n)})`;
-        // }
-
-        // function xenotation(n) {
-        //     if (n === 2) return nthPrime(1);
-        // }
-
-        function xenoToDecimal(x) {
-            if (x === '') return 1;
-            if (x.endsWith('.')) return 2 * xenoToDecimal(x.slice(0, x.length - 1));
-        }
-
-
-
-
-        // function xenoPrimes(n) {
-        //     // // N must be int
-        //     // n === Math.floor(n);
-        //     // if (n === 0) return [];
-        //     if (n === 1) return ['.'];
-        //     const primes = xenoPrimes(n - 1);
-        //     return [...primes, `(${primes[n-1]})`]
-        //     return [...xenoPrimes(n - 1)]
-        // }
-
 
     </script>
 </body>
