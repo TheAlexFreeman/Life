@@ -1,6 +1,7 @@
 const _COLUMNS = ['name', 'preview', 'edit', 'delete'];
 
 function createElement(tagName, className='', textContent='') {
+    // TODO: Make this more flexible (add title, id, etc.)
     const element = document.createElement(tagName);
     element.className = className;
     if (textContent) {
@@ -61,24 +62,36 @@ class PatternMenu {
 
     _createPreviewCell(pattern) {
         const previewCell = createElement('td', 'pattern-preview');
-        const rotateLeft = createElement('a', 'rotate-button', `↺`);
-        rotateLeft.title = 'Rotate Left'
-        const rotateRight = createElement('a', 'rotate-button', `↻`);
         const previewFrame = createElement('div', 'preview-grid-frame');
-        const flipVertical = createElement('div', 'flip-button', '↕');
-        previewCell.append(flipVertical);
-        previewCell.append(rotateLeft, previewFrame, rotateRight);
-        const flipHorizontal = createElement('div', 'flip-button', '↔');
-        previewCell.append(flipHorizontal);
-
         const game = this._createPreviewGrid(previewFrame, pattern);
         previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.normalizedCells});
-        rotateLeft.onclick = () => game.rotate(false);
-        rotateRight.onclick = () => game.rotate(true);
-        flipVertical.onclick = () => game.flip(true);
-        flipHorizontal.onclick = () => game.flip(false);
         this._patterns.push(game);
+        previewCell.append(previewFrame);
+        previewCell.append(this._createPreviewControls(game));
         return previewCell;
+    }
+
+    _createPreviewControls(game) {
+        const controlPanel = createElement('div', 'menu-control-panel');
+
+        const rotateLeft = createElement('a', 'rotate-button', `↺`);
+        rotateLeft.title = 'Rotate Counterclockwise';
+        rotateLeft.onclick = () => game.rotate(false);
+
+        const rotateRight = createElement('a', 'rotate-button', `↻`);
+        rotateRight.title = 'Rotate Clockwise';
+        rotateRight.onclick = () => game.rotate(true);
+
+        const flipVertical = createElement('a', 'flip-button', '↕');
+        flipVertical.title = 'Flip Vertically';
+        flipVertical.onclick = () => game.flip(true);
+
+        const flipHorizontal = createElement('a', 'flip-button', '↔');
+        flipHorizontal.title = 'FlipHorizontally';
+        flipHorizontal.onclick = () => game.flip(false);
+
+        controlPanel.append(rotateLeft, rotateRight, flipVertical, flipHorizontal);
+        return controlPanel;
     }
 
     _createPreviewGrid(frame, pattern) {

@@ -163,9 +163,6 @@
 
         // User Actions
 
-        let playInterval = null;
-        let isRunning = false;
-
         // TODO: Implement modes!!!
         let mode = 'DEFAULT';
 
@@ -184,11 +181,11 @@
                 [ESCAPE]: event => resetCellEventHandlers(),
                 [SPACE]: event => {
                     event.preventDefault();
-                    isRunning ? stopAction() : playAction();
+                    GAME._isRunning ? stopAction() : playAction();
                 },
                 [LEFT]: event => backAction(),
                 [UP]: event => {
-                    if (isRunning) {
+                    if (GAME._isRunning) {
                         event.preventDefault();
                         INPUT.speedSlider.stepUp();
                         playAction();
@@ -196,7 +193,7 @@
                 },
                 [RIGHT]: event => tickAction(),
                 [DOWN]: event => {
-                    if (isRunning) {
+                    if (GAME._isRunning) {
                         event.preventDefault();
                         INPUT.speedSlider.stepDown();
                         playAction();
@@ -207,17 +204,11 @@
 
 
         function playAction() {
-            if (isRunning) {
-                clearInterval(playInterval);
-            } else {
-                isRunning = true;
-            }
-            playInterval = setInterval(() => tickAction(), INPUT.tickDelay);
+            GAME.play(INPUT.tickDelay);
         }
 
         function stopAction() {
-            clearInterval(playInterval);
-            isRunning = false;
+            GAME.stop();
         }
 
         function tickAction() {
@@ -338,7 +329,6 @@
                 }
             }
         }
-
     </script>
 </body>
 

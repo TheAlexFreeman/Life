@@ -1,7 +1,6 @@
 class Game {
     _grid;
     _frame;
-    _memory = [];
     _liveCells = new Points();
     _relevantCells = new Points();
     _settings = {
@@ -10,6 +9,9 @@ class Game {
         borders: false,
         editable: true,
     }
+    _memory = [];
+    _isRunning = false;
+    _interval = null;
 
     get hasMemory() {
         return !!this._memory.length;
@@ -123,10 +125,10 @@ class Game {
         return this._liveCells.has(p);
     }
 
-    addCell(p) {
+    addCell(p, color='limegreen') {
         this._liveCells.add(p);
         this._relevantCells.addPoints(p, ...this._neighbors(p));
-        this._grid.setColor(p, this.colors.on);
+        this._grid.setColor(p, color);
     }
 
     removeCell(p) {
@@ -134,12 +136,12 @@ class Game {
         this._grid.setColor(p, this.colors.off);
     }
 
-    toggleCell(p) {
+    toggleCell(p, color='limegreen') {
         if (this.hasCell(p)) {
             this.removeCell(p);
             return -1;
         } else {
-            this.addCell(p);
+            this.addCell(p, color);
             return 1;
         }
     }
@@ -232,6 +234,28 @@ class Game {
         return changes;
     }
 
+    play(tickMS, generations=Infinity, callback=null) {
+        if (this._isRunning) {
+            clearInterval(this._interval);
+        } else {
+            this._isRunning = true;
+        }
+        const playTick = () => {
+            if (this._memory.length < generations) {
+                this.tick();
+            } else {
+                this.stop(callback);
+            }
+        }
+        this._interval = setInterval(playTick, tickMS);
+    }
+
+    stop(callback=null) {
+        this._isRunning = false;
+        clearInterval(this._interval);
+        if (callback) callback();
+    }
+
     get cellsToChange() {
         return this._relevantCells.filter(p => this._needsUpdate(p));
     }
@@ -247,9 +271,9 @@ class Game {
         if (this.hasCell(point)) return liveNeighborCount < 2 || liveNeighborCount > 3;
         if (liveNeighborCount === 3) {
             let colors = liveNeighbors.map(p => this._grid.getColor(p));
-            console.dir(colors);
+            return this._nextColor(colors);
         }
-        return liveNeighborCount === 3;
+        return false;
     }
 
     _nextColor(colors) {
@@ -269,15 +293,15 @@ class Game {
     _crossBorders = ([...points]) => points.map(p => this._mod(p));
 
     _includes(point) {
-        return this._includesX(point) && this._includesY(point);
+        return this._includesX(point.x) && this._includesY(point.y);
     }
 
-    _includesX(point) {
-        return point.x >= 0 && point.x < this.size.x;
+    _includesX(x) {
+        return x >= 0 && x < this.size.x;
     }
 
-    _includesY(point) {
-        return point.y >= 0 && point.y < this.size.y;
+    _includesY(y) {
+        return y >= 0 && y < this.size.y;
     }
 
     _mod(point) {
