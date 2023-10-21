@@ -1,4 +1,4 @@
-const _COLUMNS = ['name', 'preview', 'edit', 'delete'];
+const _COLUMNS = ['name', 'preview', 'controls', 'description'];
 
 function createElement(tagName, className='', textContent='') {
     // TODO: Make this more flexible (add title, id, etc.)
@@ -55,8 +55,10 @@ class PatternMenu {
 
         const previewCell = this._createPreviewCell(pattern);
         row.appendChild(previewCell);
-        row.appendChild(createElement('td', 'pattern-edit'));
-        row.appendChild(createElement('td', 'pattern-delete'));
+        const controlCell = createElement('td', 'pattern-controls');
+        controlCell.append(this._createPreviewControls(this._patterns[this._patterns.length - 1]));
+        row.appendChild(controlCell);
+        row.appendChild(createElement('td', 'pattern-description'));
         this._menu.appendChild(row);
     }
 
@@ -67,7 +69,6 @@ class PatternMenu {
         previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.normalizedCells});
         this._patterns.push(game);
         previewCell.append(previewFrame);
-        previewCell.append(this._createPreviewControls(game));
         return previewCell;
     }
 

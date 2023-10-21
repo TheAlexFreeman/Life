@@ -9,9 +9,9 @@ class Game {
         borders: false,
         editable: true,
     }
-    _memory = [];
     _isRunning = false;
     _interval = null;
+    _memory = [];
 
     get hasMemory() {
         return !!this._memory.length;
@@ -240,9 +240,11 @@ class Game {
         } else {
             this._isRunning = true;
         }
+        let counter = 0;
         const playTick = () => {
-            if (this._memory.length < generations) {
+            if (counter < generations) {
                 this.tick();
+                counter += 1;
             } else {
                 this.stop(callback);
             }
