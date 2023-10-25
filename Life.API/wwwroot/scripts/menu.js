@@ -66,7 +66,7 @@ class PatternMenu {
         const previewCell = createElement('td', 'pattern-preview');
         const previewFrame = createElement('div', 'preview-grid-frame');
         const game = this._createPreviewGrid(previewFrame, pattern);
-        previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.normalizedCells});
+        previewFrame.onclick = () => this.onPatternSelected({...pattern, points: game.pattern});
         this._patterns.push(game);
         previewCell.append(previewFrame);
         return previewCell;
@@ -99,6 +99,6 @@ class PatternMenu {
         const points = new Points(...pattern.points);
         const padding = {x: 2, y: 2};
         const size = ptAdd(points.boundingBox, ptAdd(padding, padding));
-        return new Game({...SETTINGS, size}, frame, points.translateToList(padding.x, padding.y))
+        return new GameDemo({...SETTINGS, size}, frame, points.translateToList(padding.x, padding.y))
     }
 }

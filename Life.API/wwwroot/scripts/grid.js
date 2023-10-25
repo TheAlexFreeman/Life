@@ -34,6 +34,11 @@ class Grid {
         }
     }
 
+    setGridEventHandlers(handlers) {
+        const { onClick } = handlers;
+        this.root.onclick = onClick;
+    }
+
     setCellEventHandlers(x = 0, y = 0, handlers) {
         const { onClick, onMouseOver, onMouseOut } = handlers;
         const cell = this._grid[x][y];
@@ -68,36 +73,27 @@ class Grid {
     // Grid construction methods
 
     _createGrid(settings, cells) {
-        const { size, borders, editable } = settings;
+        const { size, colors, borders } = settings;
         const gridElement = createElement('div', 'grid');
-        if (!editable) {
-            gridElement.style.cursor = 'pointer';
-        }
         for (let x = 0; x < size.x; x++) {
-            gridElement.appendChild(this._createRow(x, size.y, settings, cells.filter(p => p.x === x)));
+            gridElement.appendChild(this._createRow(x, size.y, colors, cells.filter(p => p.x === x)));
         }
         this.setBorders(borders);
         return gridElement;
     }
 
-    _createRow(x, size, settings, cells) {
+    _createRow(x, size, colors, cells) {
         const row = [];
         const rowElement = createElement('div', 'row');
         for (let y = 0; y < size; y++) {
+            const cell = createElement('span', 'cell');
             const isAlive = cells.some(p => p.x === x && p.y === y);
-            const cell = this._createCell(x, y, settings, isAlive);
+            cell.style.backgroundColor = isAlive ? colors.on : colors.off;
             row.push(cell);
             rowElement.appendChild(cell);
         }
         this._grid.push(row);
         return rowElement;
-    }
-
-    _createCell(x, y, settings, isAlive) {
-        const cell = createElement('span', 'cell');
-        const { colors } = settings;
-        cell.style.backgroundColor = isAlive ? colors.on : colors.off;
-        return cell;
     }
 
 }
