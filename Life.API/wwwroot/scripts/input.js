@@ -33,12 +33,12 @@ class InputHandler {
             case 2: return 500;
             case 3: return 333;
             case 4: return 250;
-            case 5: return 125;
-            case 6: return 88;
-            case 7: return 50;
-            case 8: return 20;
-            case 9: return 10;
-            case 10: return 1;
+            case 5: return 180;
+            case 6: return 125;
+            case 7: return 88;
+            case 8: return 50;
+            case 9: return 25;
+            case 10: return 10;
             default: return 1000;
         }
     }
