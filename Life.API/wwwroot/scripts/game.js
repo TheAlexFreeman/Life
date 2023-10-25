@@ -1,105 +1,27 @@
-class Game {
-    _grid;
-    _frame;
+class GameLogic {
+    // TODO: Add multicolored logics
     _liveCells = new Points();
     _relevantCells = new Points();
-    _settings = {
-        size: {x: 150, y: 150},
-        colors: {on: 'limegreen', off: 'lightgray'},
-        borders: false,
-        editable: true,
-    }
-    _isRunning = false;
-    _interval = null;
-    _memory = [];
-
-    get hasMemory() {
-        return !!this._memory.length;
-    }
-    get latestChanges() {
-        return this._memory[this._memory.length - 1];
-    }
-    popMemory() {
-        return this._memory.pop();
-    }
-    get generation() {
-        return this._memory.filter(changes => (changes instanceof Points)).length;
-    }
+    _size = {x: 1, y: 1};
+    _borders = false;
 
     get size() {
-        return this._settings.size;
+        return this._size;
     }
     set size(value={x: 1, y: 1}) {
-        this._settings.size = {...value};
+        this._size = value;
         this._liveCells = this._liveCells.onBoard(value);
         this._relevantCells = this._relevantCells.onBoard(value);
-        if (this._frame) {
-            this.displayGrid(this._frame);
-        }
-    }
-
-    get colors() {
-        return this._settings.colors;
-    }
-    setCellColor(color = 'limegreen') {
-        this._settings.colors.on = color;
-        this._liveCells.forEach(cell => this._grid.setColor(cell, color));
-    }
-    setBackgroundColor(color = 'lightgray') {
-        this._settings.colors.off = color;
-        this._mapXY((x, y) => {
-            if (!this.hasCell({x, y})) {
-                this._grid.setColor({x, y}, color);
-            }
-        });
     }
 
     get borders() {
-        return this._settings.borders;
+        return this._borders;
     }
-    set borders(value=false) {
-        this._settings.borders = value;
-        // TODO: Clean this up
+    set borders(value = false) {
+        this._borders = value;
         this._crossBorders = value ?
             (points) => points.filter(p => this._includes(p)) :
             (points) => points.map(p => this._mod(p));
-        this._grid.setBorders(value);
-    }
-
-    get editable() {
-        return this._settings.editable;
-    }
-    set editable(value=true) {
-        // TODO: Set hover/click handlers here
-        this._settings.editable = value;
-    }
-
-
-    _mapXY(func = (x, y) => { }) {
-        for (let x = 0; x < this.size.x; x++) {
-            for (let y = 0; y < this.size.y; y++) {
-                func(x, y);
-            }
-        }
-    }
-
-
-    constructor(settings, frame = null, cells = []) {
-        this._frame = frame;
-        // TODO: Fix the whole setup process
-        this.size = settings.size;
-        this.borders = settings.borders;
-        this._settings.colors = settings.colors;
-        this.editable = settings.editable;
-        cells.forEach(p => {
-            if (p.x < this.size.x && p.y < this.size.y) {
-                this.addCell(p);
-            }
-        });
-    }
-
-    get hasCells() {
-        return this._liveCells.hasPoints;
     }
 
     get population() {
@@ -114,148 +36,93 @@ class Game {
         return this._liveCells.atOrigin.list;
     }
 
-    displayGrid(frame) {
-        if (this._grid) {
-            this._grid.remove();
+    constructor(size, borders) {
+        // TODO: Fix the whole setup process
+        this.size = size;
+        this.borders = borders;
+    }
+
+    toggleCell(p) {
+        if (this.hasCell(p)) {
+            this.removeCell(p);
+            return -1;
+        } else {
+            this.addCell(p);
+            return 1;
         }
-        this._grid = new Grid(frame, this._settings, this.liveCells);
     }
 
     hasCell(p) {
         return this._liveCells.has(p);
     }
 
-    addCell(p, color='limegreen') {
+    addCell(p) {
         this._liveCells.add(p);
         this._relevantCells.addPoints(p, ...this._neighbors(p));
-        this._grid.setColor(p, color);
     }
 
     removeCell(p) {
         this._liveCells.remove(p);
-        this._grid.setColor(p, this.colors.off);
-    }
-
-    toggleCell(p, color='limegreen') {
-        if (this.hasCell(p)) {
-            this.removeCell(p);
-            return -1;
-        } else {
-            this.addCell(p, color);
-            return 1;
-        }
     }
 
     clear() {
-        this._liveCells.forEach(p => this.removeCell(p));
+        this._liveCells.clear();
         this._relevantCells.clear();
-        this._memory = [];
     }
 
-    setCellEventHandlers(handlers = { onClick: (x, y) => this.toggleCell({x, y}) }) {
-        this._mapXY((x, y) => this._grid.setCellEventHandlers(x, y, handlers));
+    rotate(clockwise = true) {
+        const {x, y} = this._liveCells.min;
+        const newCells = this._liveCells.atOrigin.rotate(clockwise);
+        return this.translatePattern(newCells, x, y);
     }
 
-    // Support for adding patterns from menu
-
-    previewPattern(pattern, dx = 0, dy = 0, on = false) {
-        const previewCell = on ?
-            cell => {this._grid.setColorAndOpacity(cell, this.colors.on, 0.8)} :
-            cell => {this._grid.setColorAndOpacity(cell, this._colorAt(cell), 1.0)};
-        for (let cell of this._translatePattern(pattern, dx, dy)) {
-            previewCell(cell);
-        }
-    }
-
-     _colorAt(p) {
-        return this.hasCell(p) ? this.colors.on : this.colors.off;
+    flip(vertical = true) {
+        const {x, y} = this._liveCells.min;
+        const newCells = this._liveCells.atOrigin.flip(vertical);
+        return this.translatePattern(newCells, x, y);
     }
 
     addPattern(pattern, dx = 0, dy = 0) {
-        const translatedPattern = this._translatePattern(pattern, dx, dy);
+        const translatedPattern = this.translatePattern(pattern, dx, dy);
         const newCells = [];
         for (let p of translatedPattern) {
             if (!this.hasCell(p)) {
                 this.addCell(p);
                 newCells.push(p);
             }
-            this._grid.setOpacity(p, 1.0);
         }
         return newCells;
     }
 
-    addEdit(...points) {
-        if (this._memory.length) {
-            const changes = this.latestChanges;
-            if (changes instanceof Array) {
-                // Last change was manual edit
-                changes.push(...points);
-            } else {
-                this._memory.push(points);
-            }
-        }
-    }
-
-    _translatePattern(pattern, x = 0, y = 0) {
+    translatePattern(pattern, x = 0, y = 0) {
         const translatePoint = p => ptAdd(p, {x, y});
         const translatedPoints = pattern.map(translatePoint);
         return this._crossBorders(translatedPoints);
     }
 
-    rotate(clockwise = true) {
-        const {x, y} = this.size;
-        const min = this._liveCells.min;
-        const newCells = this._liveCells.atOrigin.rotate(clockwise);
-        this.clear();
-        this.size = {x: y, y: x};
-        newCells.forEach(p => this.addCell(ptAdd(p, min)));
+    // Heart of the game. Everything below should be optimized for speed.
 
-    }
+    _isRunning = false;
+    _interval = null;
 
-    flip(vertical = true) {
-        const min = this._liveCells.min;
-        const newCells = this._liveCells.atOrigin.flip(vertical);
-        this.clear();
-        newCells.forEach(p => this.addCell(ptAdd(p, min)));
-    }
-
-    // Heart of the game. This method and those supporting it should be optimized for speed.
-
-    tick() {
-        const changes = this.cellsToChange;
-        changes.forEach(p => this.toggleCell(p));
-        this._memory.push(changes);
-        return changes;
-    }
-
-    back() {
-        const changes = this.popMemory();
-        changes.forEach(p => this.toggleCell(p));
-        return changes;
-    }
-
-    play(tickMS, generations=Infinity, callback=null) {
+    play(tickMS, tick = () => this.tick()) {
         if (this._isRunning) {
             clearInterval(this._interval);
         } else {
             this._isRunning = true;
         }
-        let counter = 0;
-        const playTick = () => {
-            if (counter < generations) {
-                this.tick();
-                counter += 1;
-            } else {
-                this.stop(callback);
-            }
-        }
-        this._interval = setInterval(playTick, tickMS);
+        this._interval = setInterval(tick, tickMS);
     }
 
-    stop(callback=null) {
+    stop() {
         this._isRunning = false;
         clearInterval(this._interval);
-        if (callback) callback();
+    }
+
+    tick() {
+        const changes = this.cellsToChange;
+        changes.forEach(p => this.toggleCell(p));
+        return changes;
     }
 
     get cellsToChange() {
@@ -269,13 +136,8 @@ class Game {
             this._relevantCells.remove(point);
         }
         // This is where the magic happens!
-        // TODO: Account for colors in 2/4/multicolor modes
         if (this.hasCell(point)) return liveNeighborCount < 2 || liveNeighborCount > 3;
-        if (liveNeighborCount === 3) {
-            let colors = liveNeighbors.map(p => this._grid.getColor(p));
-            return this._nextColor(colors);
-        }
-        return false;
+        return liveNeighborCount === 3;
     }
 
     _nextColor(colors) {
@@ -313,5 +175,284 @@ class Game {
             y: (y + point.y) % y
         }
     }
+}
 
+
+class GameBase {
+    _grid;
+    _frame;
+    _gameLogic;
+    _settings = {
+        colors: {on: 'limegreen', off: 'lightgray'},
+    }
+
+    get settings() {
+        return {
+            size: this.size,
+            colors: this.colors,
+            borders: this.borders,
+        }
+    }
+
+    get size() {
+        return this._gameLogic.size;
+    }
+    set size(value={x: 1, y: 1}) {
+        this._gameLogic.size = value;
+        if (this._frame) {
+            this.displayGrid(this._frame);
+        }
+    }
+
+    get colors() {
+        return this._settings.colors;
+    }
+    setCellColor(color = 'limegreen') {
+        this.colors.on = color;
+        this._liveCells.forEach(cell => this._grid.setColor(cell, color));
+    }
+    setBackgroundColor(color = 'lightgray') {
+        this.colors.off = color;
+        this._forEach(p => {
+            if (!this.hasCell(p)) {
+                this._grid.setColor(p, color);
+            }
+        });
+    }
+
+    get borders() {
+        return this._gameLogic.borders;
+    }
+    set borders(value=false) {
+        this._gameLogic.borders = value;
+        this._grid.setBorders(value);
+    }
+
+    _forEach(func = ({x, y}) => { }) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                func({x, y});
+            }
+        }
+    }
+
+    get cells() {
+        return this._gameLogic.liveCells;
+    }
+
+    get pattern() {
+        return this._gameLogic.normalizedCells;
+    }
+
+    get population() {
+        return this._gameLogic.population;
+    }
+
+    constructor(settings, frame = null, cells = []) {
+        this._frame = frame;
+        this._gameLogic = new GameLogic(settings.size, settings.borders);
+        this._settings.colors = settings.colors;
+        this.size = settings.size;
+        cells.forEach(p => this.addCell(p));
+    }
+
+    displayGrid(frame) {
+        if (this._grid) {
+            this._grid.remove();
+        }
+        this._grid = new Grid(frame, this.settings, this.cells);
+    }
+
+    hasCell(p) {
+        return this._gameLogic.hasCell(p);
+    }
+
+    addCell(p, color='limegreen') {
+        this._gameLogic.addCell(p);
+        this._grid.setColor(p, color);
+    }
+
+    removeCell(p) {
+        this._gameLogic.removeCell(p);
+        this._grid.setColor(p, this.colors.off);
+    }
+
+    toggleCell(p, color='limegreen') {
+        if (this.hasCell(p)) {
+            this.removeCell(p);
+            return -1;
+        } else {
+            this.addCell(p, color);
+            return 1;
+        }
+    }
+
+    rotate(clockwise = true) {
+        const rotatedCells = this._gameLogic.rotate(clockwise);
+        this.clear();
+        const {x, y} = this.size;
+        this.size = {x: y, y: x};
+        this.addPattern(rotatedCells);
+    }
+
+    flip(vertical = true) {
+        const flippedCells = this._gameLogic.flip(vertical);
+        this.clear();
+        this.addPattern(flippedCells);
+    }
+
+    clear() {
+        this.cells.forEach(p => this.removeCell(p));
+        this._gameLogic.clear();
+    }
+
+    addPattern(pattern, dx = 0, dy = 0) {
+        const newCells = this._gameLogic.addPattern(pattern, dx, dy);
+        newCells.forEach(p => this._grid.setColor(p, this.colors.on));
+        return newCells;
+    }
+
+    tick() {
+        const changes = this._gameLogic.tick();
+        changes.forEach(p => this._correctColor(p));
+        return changes;
+    }
+
+    _correctColor(p) {
+        this._grid.setColor(p, this.hasCell(p) ? this.colors.on : this.colors.off);
+    }
+
+    play(tickMS, tick = () => this.tick()) {
+        this._gameLogic.play(tickMS, tick);
+    }
+
+    playWhile(tickMS, condition = () => true, onStop = null) {
+        const tick = () => {
+            if (condition()) {
+                this.tick();
+            } else {
+                this.stop(onStop);
+            }
+        }
+        this._gameLogic.play(tickMS, tick);
+    }
+
+    playGenerations(tickMS, generations=Infinity, onStop=null) {
+        let counter = 0;
+        const tick = () => {
+            if (counter < generations) {
+                this.tick();
+                counter += 1;
+            } else {
+                this.stop(onStop);
+            }
+        }
+        this._gameLogic.play(tickMS, tick);
+    }
+
+    stop(callback=null) {
+        this._gameLogic.stop();
+        if (callback) callback();
+    }
+
+}
+
+
+class GameDemo extends GameBase {
+
+    setClickHandler(onClick = () => { }) {
+        this._grid.setGridEventHandlers({ onClick });
+    }
+
+    repeat(seedPattern, generations, tickMS) {
+        const play = () => {
+            this.clear();
+            this.addPattern(seedPattern);
+            this.playGenerations(tickMS, generations, play());
+        }
+        play();
+    }
+}
+
+
+class GameMemory {
+    _memory = [];
+
+    get latestChanges() {
+        return this._memory[this._memory.length - 1];
+    }
+
+    countGenerations() {
+        return this._memory.filter(changes => !(changes instanceof Array)).length;
+    }
+
+    addEdit(...points) {
+        if (this._memory.length) {
+            const changes = this.latestChanges;
+            if (changes instanceof Array) {
+                // Last change was manual edit
+                changes.push(...points);
+            } else {
+                this._memory.push(points);
+            }
+        }
+    }
+
+    pop() {
+        return this._memory.pop();
+    }
+
+    clear() {
+        this._memory = [];
+    }
+}
+
+
+class GameBoard extends GameBase {
+    _memory = new GameMemory();
+
+    get generation() {
+        return this._memory.countGenerations();
+    }
+
+    constructor(settings, frame = null, cells = []) {
+        super(settings, frame, cells);
+        this.setCellEventHandlers();
+    }
+
+    clear() {
+        super.clear();
+        this._memory.clear();
+    }
+
+    toggleCell(p, color='limegreen') {
+        this._memory.addEdit(p);
+        return super.toggleCell(p, color);
+    }
+
+    addPattern(pattern, x = 0, y = 0) {
+        const newCells = super.addPattern(pattern, x, y);
+        this._memory.addEdit(...newCells);
+        pattern.forEach(p => this._grid.setOpacity(p, 1.0));
+        return newCells;
+    }
+
+    setCellEventHandlers(handlers = { onClick: (x, y) => () => this.toggleCell({x, y}) }) {
+        this._forEach(({x, y}) => this._grid.setCellEventHandlers(x, y, handlers));
+    }
+
+    // Support for adding patterns from menu
+
+    previewPattern(pattern, dx = 0, dy = 0, on = false) {
+        const previewCell = on ?
+            cell => {this._grid.setColorAndOpacity(cell, this.colors.on, 0.8)} :
+            cell => {this._grid.setColorAndOpacity(cell, this._colorAt(cell), 1.0)};
+        for (let cell of this._gameLogic.translatePattern(pattern, dx, dy)) {
+            previewCell(cell);
+        }
+    }
+
+     _colorAt(p) {
+        return this.hasCell(p) ? this.colors.on : this.colors.off;
+    }
 }
