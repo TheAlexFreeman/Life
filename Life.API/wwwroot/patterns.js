@@ -1629,3 +1629,214 @@ function rleToXY(rleString) {
     }
     return result;
 }
+
+const SimkinGliderGun = [
+    point(0, 0),
+    point(0, 1),
+    point(0, 7),
+    point(0, 8),
+    point(1, 0),
+    point(1, 1),
+    point(1, 7),
+    point(1, 8),
+    point(3, 4),
+    point(3, 5),
+    point(4, 5),
+    point(4, 4),
+    point(12, 32),
+    point(12, 31),
+    point(12, 26),
+    point(12, 23),
+    point(12, 27),
+    point(11, 32),
+    point(11, 31),
+    point(11, 22),
+    point(10, 23),
+    point(10, 28),
+    point(9, 28),
+    point(9, 24),
+    point(13, 25),
+    point(13, 24),
+    point(8, 27),
+    point(8, 25),
+];
+
+const patterns = [
+{name: 'block', points: [point(0, 0), point(0, 1), point(1, 0), point(1, 1)]},
+{name: 'blinker', points: [point(0, 1), point(0, 2), point(0, 0)]},
+{name: 'beehive', points: [point(0, 1), point(1, 0), point(1, 2), point(2, 0), point(2, 2), point(3, 1)]},
+{name: 'glider', points: [point(0, 0), point(0, 1), point(0, 2), point(1, 2), point(2, 1)]},
+{name: 'r-pentomino', points: [point(0, 0), point(0, 1), point(1, 1), point(1, 2), point(2, 1)]},
+{name: 'pulsar', points: PULSAR_POINTS},
+{name: 'butterfly', points: [
+    point(1, 0),
+    point(1, 1),
+    point(1, 3),
+    point(1, 4),
+    point(2, 0),
+    point(2, 1),
+    point(2, 3),
+    point(2, 4),
+    point(0, 2),
+]},
+{name: 'lightweight spaceship', points: [
+    {
+        "x": 0,
+        "y": 3
+    },
+    {
+        "x": 0,
+        "y": 2
+    },
+    {
+        "x": 0,
+        "y": 4
+    },
+    {
+        "x": 0,
+        "y": 1
+    },
+    {
+        "x": 1,
+        "y": 0
+    },
+    {
+        "x": 1,
+        "y": 4
+    },
+    {
+        "x": 2,
+        "y": 4
+    },
+    {
+        "x": 3,
+        "y": 3
+    },
+    {
+        "x": 3,
+        "y": 0
+    }
+]},
+{name: 'pinwheel', points: [
+    {
+        "x": 5,
+        "y": 1
+    },
+    {
+        "x": 5,
+        "y": 11
+    },
+    {
+        "x": 5,
+        "y": 2
+    },
+    {
+        "x": 5,
+        "y": 10
+    },
+    {
+        "x": 5,
+        "y": 3
+    },
+    {
+        "x": 6,
+        "y": 0
+    },
+    {
+        "x": 6,
+        "y": 12
+    },
+    {
+        "x": 6,
+        "y": 3
+    },
+    {
+        "x": 6,
+        "y": 9
+    },
+    {
+        "x": 7,
+        "y": 1
+    },
+    {
+        "x": 7,
+        "y": 11
+    },
+    {
+        "x": 7,
+        "y": 2
+    },
+    {
+        "x": 7,
+        "y": 10
+    },
+    {
+        "x": 7,
+        "y": 9
+    },
+    {
+        "x": 3,
+        "y": 6
+    },
+    {
+        "x": 3,
+        "y": 7
+    },
+    {
+        "x": 9,
+        "y": 6
+    },
+    {
+        "x": 9,
+        "y": 5
+    },
+    {
+        "x": 2,
+        "y": 5
+    },
+    {
+        "x": 2,
+        "y": 7
+    },
+    {
+        "x": 10,
+        "y": 5
+    },
+    {
+        "x": 10,
+        "y": 7
+    },
+    {
+        "x": 1,
+        "y": 5
+    },
+    {
+        "x": 1,
+        "y": 7
+    },
+    {
+        "x": 11,
+        "y": 5
+    },
+    {
+        "x": 11,
+        "y": 7
+    },
+    {
+        "x": 0,
+        "y": 6
+    },
+    {
+        "x": 12,
+        "y": 6
+    }
+]},
+{
+name: "Gosper Glider Gun",
+points: GGG,
+},
+{
+name: "Simkin Glider Gun (bi-directional)",
+points: SimkinGliderGun,
+},
+];

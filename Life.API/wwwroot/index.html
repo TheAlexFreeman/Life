@@ -167,33 +167,25 @@
         let mode = 'DEFAULT';
 
         // Keystroke handler
-        window.onkeydown = function (keyboardEvent) {
-            // TODO: Better way to distinguish 'active' element of page
-            if (keyboardEvent.target === document.body) {
-                const keystrokeHandler = KEYSTROKE_HANDLERS[mode][keyboardEvent.keyCode]
-                keystrokeHandler(keyboardEvent);
-            }
-        };
-
         const { ESCAPE, SPACE, LEFT, UP, RIGHT, DOWN } = INPUT.keyCodes;
         const KEYSTROKE_HANDLERS = {
             DEFAULT: {
                 [ESCAPE]: event => resetCellEventHandlers(),
                 [SPACE]: event => {
                     event.preventDefault();
-                    GAME._isRunning ? stopAction() : playAction();
+                    GAME.isRunning ? stopAction() : playAction();
                 },
-                [LEFT]: event => backAction(),
+                [LEFT]: event => {event.preventDefault(); backAction()},
+                [RIGHT]: event => {event.preventDefault(); tickAction()},
                 [UP]: event => {
-                    if (GAME._isRunning) {
+                    if (GAME.isRunning) {
                         event.preventDefault();
                         INPUT.speedSlider.stepUp();
                         playAction();
                     }
                 },
-                [RIGHT]: event => tickAction(),
                 [DOWN]: event => {
-                    if (GAME._isRunning) {
+                    if (GAME.isRunning) {
                         event.preventDefault();
                         INPUT.speedSlider.stepDown();
                         playAction();
@@ -201,6 +193,14 @@
                 },
             },
         }
+
+        window.onkeydown = function (keyboardEvent) {
+            // TODO: Better way to distinguish 'active' element of page
+            if (keyboardEvent.target === document.body) {
+                const keystrokeHandler = KEYSTROKE_HANDLERS[mode][keyboardEvent.keyCode]
+                keystrokeHandler(keyboardEvent);
+            }
+        };
 
 
         function playAction() {
@@ -218,14 +218,10 @@
         }
 
         function backAction() {
-            const changes = GAME.popMemory();
+            const changes = GAME.back();
             if (changes instanceof Points) {
                 // Natural generation
-                changes.forEach(p => GAME.toggleCell(p));
                 INPUT.generationCount -= 1;
-            } else if (changes instanceof Array) {
-                // Edits since last tick
-                changes.forEach(p => GAME.toggleCell(p));
             }
             INPUT.populationCount = GAME.population;
         }

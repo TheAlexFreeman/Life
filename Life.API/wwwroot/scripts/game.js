@@ -102,20 +102,20 @@ class GameLogic {
 
     // Heart of the game. Everything below should be optimized for speed.
 
-    _isRunning = false;
+    isRunning = false;
     _interval = null;
 
     play(tickMS, tick = () => this.tick()) {
-        if (this._isRunning) {
+        if (this.isRunning) {
             clearInterval(this._interval);
         } else {
-            this._isRunning = true;
+            this.isRunning = true;
         }
         this._interval = setInterval(tick, tickMS);
     }
 
     stop() {
-        this._isRunning = false;
+        this.isRunning = false;
         clearInterval(this._interval);
     }
 
@@ -234,6 +234,10 @@ class GameBase {
                 func({x, y});
             }
         }
+    }
+
+    get isRunning() {
+        return this._gameLogic.isRunning;
     }
 
     get cells() {
@@ -386,20 +390,27 @@ class GameMemory {
         return this._memory.filter(changes => !(changes instanceof Array)).length;
     }
 
+    addTick(points) {
+        this._memory.push(points);
+    }
+
     addEdit(...points) {
         if (this._memory.length) {
             const changes = this.latestChanges;
             if (changes instanceof Array) {
                 // Last change was manual edit
+                // New edit is added to latest changes
                 changes.push(...points);
             } else {
+                // Last change was natural generation
+                // New edit becomes NEW latest changes
                 this._memory.push(points);
             }
         }
     }
 
     pop() {
-        return this._memory.pop();
+        return this._memory.pop() || [];
     }
 
     clear() {
@@ -418,6 +429,18 @@ class GameBoard extends GameBase {
     constructor(settings, frame = null, cells = []) {
         super(settings, frame, cells);
         this.setCellEventHandlers();
+    }
+
+    tick() {
+        const changes = super.tick();
+        this._memory.addTick(changes);
+        return changes;
+    }
+
+    back() {
+        const changes = this._memory.pop();
+        changes.forEach(p => super.toggleCell(p));
+        return changes;
     }
 
     clear() {
