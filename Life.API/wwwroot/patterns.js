@@ -1667,7 +1667,6 @@ const patterns = [
 {name: 'beehive', points: [point(0, 1), point(1, 0), point(1, 2), point(2, 0), point(2, 2), point(3, 1)]},
 {name: 'glider', points: [point(0, 0), point(0, 1), point(0, 2), point(1, 2), point(2, 1)]},
 {name: 'r-pentomino', points: [point(0, 0), point(0, 1), point(1, 1), point(1, 2), point(2, 1)]},
-{name: 'pulsar', points: PULSAR_POINTS},
 {name: 'butterfly', points: [
     point(1, 0),
     point(1, 1),
@@ -1831,10 +1830,6 @@ const patterns = [
         "y": 6
     }
 ]},
-{
-name: "Gosper Glider Gun",
-points: GGG,
-},
 {
 name: "Simkin Glider Gun (bi-directional)",
 points: SimkinGliderGun,

@@ -372,7 +372,7 @@ class GameDemo extends GameBase {
         const play = () => {
             this.clear();
             this.addPattern(seedPattern);
-            this.playGenerations(tickMS, generations, play());
+            this.playGenerations(tickMS, generations, play);
         }
         play();
     }
@@ -457,6 +457,7 @@ class GameBoard extends GameBase {
         const newCells = super.addPattern(pattern, x, y);
         this._memory.addEdit(...newCells);
         pattern.forEach(p => this._grid.setOpacity(p, 1.0));
+        this.setCellEventHandlers();
         return newCells;
     }
 
