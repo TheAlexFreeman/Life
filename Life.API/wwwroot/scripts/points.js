@@ -289,6 +289,54 @@ class Points {
     }
 }
 
+
+// Points utility functions
+
+function ptsMap(points, func = ({x, y}) => any) {
+    const result = [];
+    points.forEach(({x, y}) => result.push(func({x, y})));
+    return result;
+}
+
+function ptsFilter(points, pred = ({x, y}) => true) {
+    const result = new Points();
+    points.forEach(p => {
+        if (pred(p)) {
+            result.add(p);
+        }
+    });
+    return result;
+}
+
+function ptsFilterToList(points, pred = ({x, y}) => true) {
+    const result = [];
+    points.forEach(p => {
+        if (pred(p)) {
+            result.push(p);
+        }
+    });
+    return result;
+}
+
+
+function ptsEquals(pts1, pts2) {
+    if (!(pts1 instanceof Points && pts2 instanceof Points)) return false;
+    if (pts1.size !== pts2.size) return false;
+    return pts1.all(p => pts2.has(p));
+}
+
+function ptsTranslate(points, x, y) {
+    const result = new Points();
+    points.forEach(p => result.add(ptAdd(p, {x, y})));
+    return result;
+}
+
+function ptsTranslateToList(points, x, y) {
+    const result = [];
+    points.forEach(p => result.push(ptAdd(p, {x, y})));
+    return result;
+}
+
 // Positional Calculations
 
 function neighbor(x = 0, y = 0) {
