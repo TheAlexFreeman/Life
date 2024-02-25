@@ -1,3 +1,60 @@
+class GameImage {
+    _grid;
+    size = {x: 10, y: 10};
+    colors = {on: 'limegreen', off: 'lightgray'};
+    borders = false;
+
+    colorAt(p) {
+        return this._grid.getColor(p);
+    }
+
+    setCellColor(color = 'limegreen') {
+        this._forEach(p => {
+            if (this.colorAt(p) === this.colors.on) {
+                this._grid.setColor(p, color);
+            }
+        });
+        this.colors.on = color;
+    }
+    setBackgroundColor(color = 'lightgray') {
+        this._forEach(p => {
+            if (this.colorAt(p) === this.colors.off) {
+                this._grid.setColor(p, color);
+            }
+        });
+        this.colors.off = color;
+    }
+
+    _forEach(func = ({x, y}) => { }) {
+        for (let x = 0; x < this.size.x; x++) {
+            for (let y = 0; y < this.size.y; y++) {
+                func({x, y});
+            }
+        }
+    }
+
+    constructor(frame, settings, cells) {
+        this._grid = new Grid(frame, settings, cells);
+        this.size = settings.size;
+        this.colors = settings.colors;
+        this.borders = settings.borders;
+    }
+
+    toggleCell(p) {
+        const newColor = this.colorAt(p) === this.colors.off ? this.colors.on : this.colors.off;
+        this._grid.setColor(p, newColor);
+    }
+
+    run(changes, tickMS) {
+        let index = 0;
+        setInterval(() => {
+            changes[index].forEach(p => this.toggleCell(p));
+            index = (index + 1) % changes.length;
+        }, tickMS);
+    }
+
+}
+
 class GameLogic {
     // TODO: Add multicolored logics
     _liveCells = new Points();
